@@ -1,0 +1,11 @@
+# Java/Gradle
+backend/.gradle/
+backend/build/
+
+# Node/Vite
+frontend/node_modules/
+frontend/dist/
+
+# Misc
+.DS_Store
+.env
