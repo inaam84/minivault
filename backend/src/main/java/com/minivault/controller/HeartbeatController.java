@@ -54,7 +54,10 @@ public class HeartbeatController {
     }
 
     @GetMapping("/simple")
-    public String heartbeat() {
-        return "Backend is alive!";
+    public Map<String, Object> heartbeat() {
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("time", Instant.now().toString());
+        res.put("app", "Backend is up and running!");
+        return res;
     }
 }
