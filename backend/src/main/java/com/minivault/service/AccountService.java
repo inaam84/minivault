@@ -4,6 +4,7 @@ import com.minivault.dto.LoginRequest;
 import com.minivault.dto.LoginResponse;
 import com.minivault.dto.SignupRequest;
 import com.minivault.dto.SignupResponse;
+import com.minivault.exceptions.EmailAlreadyExistsException;
 import com.minivault.model.Account;
 import com.minivault.repository.AccountRepository;
 
@@ -23,7 +24,7 @@ public class AccountService {
 
     public SignupResponse signup(SignupRequest request) {
         if(accountRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use");
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
 
         Account account = Account.builder()
@@ -36,9 +37,7 @@ public class AccountService {
 
         return new SignupResponse(
             savedAccount.getId(), 
-            savedAccount.getEmail(), 
-            savedAccount.getName(), 
-            "Signup successful"
+            savedAccount.getEmail()
         );
     }
 

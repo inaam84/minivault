@@ -1,6 +1,9 @@
 version: "3.9"
 
 services:
+  # ------------------------
+  # MySQL Database
+  # ------------------------
   db:
     image: mysql:8.0
     restart: unless-stopped
@@ -19,8 +22,11 @@ services:
       timeout: 5s
       retries: 5
 
+  # ------------------------
+  # Backend (Spring Boot)
+  # ------------------------
   backend:
-    build: 
+    build:
       context: ./backend
     restart: unless-stopped
     environment:
@@ -35,6 +41,9 @@ services:
     ports:
       - "8081:8080"
 
+  # ------------------------
+  # Frontend (React/Vite)
+  # ------------------------
   frontend:
     build:
       context: ./frontend
