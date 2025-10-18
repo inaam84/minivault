@@ -1,5 +1,9 @@
 package com.minivault.service;
 
+import com.minivault.dto.SignupRequest;
+import com.minivault.dto.SignupResponse;
+import com.minivault.exceptions.EmailAlreadyExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -10,15 +14,15 @@ import com.minivault.security.JwtUtil;
 
 @Service
 public class AuthService {
-    private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
 
-    public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.accountRepository = accountRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JwtUtil jwtUtil;
 
     public String login(String email, String password) {
         var userOpt = accountRepository.findByEmail(email);
@@ -32,5 +36,24 @@ public class AuthService {
         }
 
         return jwtUtil.generateToken(user.getEmail());
+    }
+
+    public SignupResponse signup(SignupRequest request) {
+        if(accountRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException(request.getEmail());
+        }
+
+        Account account = Account.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .build();
+
+        Account savedAccount = accountRepository.save(account);
+
+        return new SignupResponse(
+                savedAccount.getId(),
+                savedAccount.getEmail()
+        );
     }
 }
