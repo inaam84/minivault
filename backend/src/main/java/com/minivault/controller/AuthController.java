@@ -5,10 +5,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.minivault.dto.ApiResponse;
 import com.minivault.dto.LoginRequest;
-import com.minivault.dto.LoginResponse;
 import com.minivault.dto.SignupRequest;
 import com.minivault.dto.SignupResponse;
-import com.minivault.model.Account;
 import com.minivault.service.AccountService;
 import com.minivault.service.AuthService;
 
@@ -21,12 +19,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/auth")
-public class AccountController {
+public class AuthController {
     
     private final AccountService accountService;
     private final AuthService authService;
 
-    public AccountController(AccountService accountService, AuthService authService) {
+    public AuthController(AccountService accountService, AuthService authService) {
         this.accountService = accountService;
         this.authService = authService;
     }

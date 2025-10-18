@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.minivault.dto.ApiResponse;
 
 @ControllerAdvice
-public class GlobalExceptionHandler  {
+public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -21,17 +21,16 @@ public class GlobalExceptionHandler  {
     public ResponseEntity<ApiResponse<?>> handleInvalidRequestBody(HttpMessageNotReadableException ex) {
         logger.warn("Request body is missing or invalid: {}", ex.getMessage());
         return ResponseEntity.badRequest().body(
-            ApiResponse.failure("INVALID_REQUEST_BODY", "Request body is missing or invalid")
-        );
+                ApiResponse.failure("INVALID_REQUEST_BODY", "Request body is missing or invalid"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         String errorMessage = ex.getBindingResult().getFieldErrors()
-                                .stream()
-                                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                                .findFirst()
-                                .orElse("Invalid input");
+                .stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .findFirst()
+                .orElse("Invalid input");
 
         return ResponseEntity.badRequest().body(ApiResponse.failure("VALIDATION_FAILED", errorMessage));
     }
@@ -41,6 +40,12 @@ public class GlobalExceptionHandler  {
     public ResponseEntity<ApiResponse<?>> handleEmailExists(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.failure("EMAIL_ALREADY_EXISTS", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.failure("INVALID_CREDENTIALS", ex.getMessage()));
     }
 
     // Fallback for unexpected errors

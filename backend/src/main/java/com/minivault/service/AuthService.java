@@ -3,10 +3,10 @@ package com.minivault.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.minivault.exceptions.InvalidCredentialsException;
 import com.minivault.model.Account;
 import com.minivault.repository.AccountRepository;
 import com.minivault.security.JwtUtil;
-
 
 @Service
 public class AuthService {
@@ -21,13 +21,16 @@ public class AuthService {
     }
 
     public String login(String email, String password) {
-        Account account = accountRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-
-        if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+        var userOpt = accountRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        return jwtUtil.generateToken(account.getEmail());
+        var user = userOpt.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        return jwtUtil.generateToken(user.getEmail());
     }
 }
