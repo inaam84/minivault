@@ -1,7 +1,6 @@
 package com.minivault.repository;
 
+import com.minivault.model.Heartbeat;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.minivault.model.Heartbeat;
-
-public interface HeartbeatRepository extends JpaRepository<Heartbeat, Long> { }
+public interface HeartbeatRepository extends JpaRepository<Heartbeat, Long> {}

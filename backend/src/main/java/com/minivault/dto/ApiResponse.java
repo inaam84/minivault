@@ -8,23 +8,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiResponse<T> {
-    private boolean success;
-    private T data;
-    private ApiError error;
+  private boolean success;
+  private T data;
+  private ApiError error;
 
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, null);
-    }
+  public static <T> ApiResponse<T> success(T data) {
+    return new ApiResponse<>(true, data, null);
+  }
 
-    public static <T> ApiResponse<T> failure(String code, String message) {
-        return new ApiResponse<>(false, null, new ApiError(code, message));
-    }
+  public static <T> ApiResponse<T> failure(String code, String message) {
+    return new ApiResponse<>(false, null, new ApiError(code, message));
+  }
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class ApiError {
-        private String code;
-        private String message;
-    }
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class ApiError {
+    private String code;
+    private String message;
+  }
 }

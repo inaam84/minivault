@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.5'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '6.21.0'
 }
 
 group = 'com.minivault'
@@ -41,6 +42,17 @@ dependencies {
     // Testing
     testImplementation 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.17.0')
+        target 'src/**/*.java'
+    }
+}
+
+tasks.named('build') {
+    dependsOn 'spotlessApply'
 }
 
 // tasks.named('test') {

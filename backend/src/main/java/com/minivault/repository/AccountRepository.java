@@ -1,10 +1,11 @@
 package com.minivault.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
 import com.minivault.model.Account;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AccountRepository extends JpaRepository<Account, Long> { 
-    Optional<Account> findByEmail(String email);
-    boolean existsByEmail(String email);
+public interface AccountRepository extends JpaRepository<Account, Long> {
+  Optional<Account> findByEmail(String email);
+
+  boolean existsByEmail(String email);
 }

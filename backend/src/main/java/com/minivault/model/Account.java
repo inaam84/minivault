@@ -1,7 +1,7 @@
 package com.minivault.model;
 
-import java.time.Instant;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
 @Entity
@@ -12,23 +12,23 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Account {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+  @Column(nullable = false, unique = true, length = 100)
+  private String email;
 
-    @Column(nullable = false)
-    private String password;
+  @Column(nullable = false)
+  private String password;
 
-    @Column(nullable = false, length = 50)
-    private String name;
-    
-    private Instant createdAt;
-    
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) createdAt = Instant.now();
-    }
+  @Column(nullable = false, length = 50)
+  private String name;
+
+  private Instant createdAt;
+
+  @PrePersist
+  public void prePersist() {
+    if (createdAt == null) createdAt = Instant.now();
+  }
 }

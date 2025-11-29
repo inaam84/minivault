@@ -56,6 +56,8 @@ services:
     volumes:
       - ./frontend:/app          # mount local code
       - /app/node_modules        # avoid overwriting container node_modules
+    environment:
+    - CHOKIDAR_USEPOLLING=true
 
 volumes:
   db_data:

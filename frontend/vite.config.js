@@ -1,17 +1,21 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
     port: 5173,
+    watch: {
+      usePolling: true, // <-- add this
+      interval: 100, // optional: faster polling interval
+    },
     proxy: {
       '/api': {
-        target: 'http://backend:8080', // backend container name + internal port
+        target: 'http://backend:8080',
         changeOrigin: true,
         secure: false,
       },
     },
   },
-})
+});
