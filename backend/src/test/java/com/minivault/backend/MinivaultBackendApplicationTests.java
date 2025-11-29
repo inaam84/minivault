@@ -8,6 +8,6 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class MinivaultBackendApplicationTests {
 
-  @Test
-  void contextLoads() {}
+    @Test
+    void contextLoads() {}
 }

@@ -10,16 +10,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Heartbeat {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  private String note;
+    private String note;
 
-  private Instant createdAt;
+    private Instant createdAt;
 
-  @PrePersist
-  public void prePersist() {
-    if (createdAt == null) createdAt = Instant.now();
-  }
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = Instant.now();
+    }
 }
