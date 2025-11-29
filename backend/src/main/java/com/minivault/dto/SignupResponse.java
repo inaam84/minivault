@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor // generates constructor with all fields
 @NoArgsConstructor // generates default constructor
 public class SignupResponse {
-  private String email;
-  private String name;
-  private String token;
+    private String email;
+    private String name;
+    private String token;
 }

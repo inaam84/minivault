@@ -7,6 +7,7 @@ WORKDIR /app
 # Install dependencies
 COPY package*.json ./
 RUN npm ci
+RUN npm run format  # <-- formats code inside container
 
 # Copy source code
 COPY . .

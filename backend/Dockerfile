@@ -16,6 +16,7 @@ RUN gradle dependencies --quiet || true
 COPY src ./src
 
 # Build the application
+RUN gradle spotlessApply
 RUN gradle clean bootJar -x test
 
 # ------------------------

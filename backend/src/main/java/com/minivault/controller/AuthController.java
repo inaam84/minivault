@@ -19,21 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired AuthService authService;
+    @Autowired AuthService authService;
 
-  @PostMapping("/signup")
-  public ResponseEntity<ApiResponse<SignupResponse>> signup(
-      @Valid @RequestBody SignupRequest request) {
-    SignupResponse response = authService.signup(request);
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<SignupResponse>> signup(
+            @Valid @RequestBody SignupRequest request) {
+        SignupResponse response = authService.signup(request);
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
-  }
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
 
-  @PostMapping("/login")
-  public ResponseEntity<ApiResponse<LoginResponse>> login(
-      @Valid @RequestBody LoginRequest request) {
-    LoginResponse response = authService.login(request.getEmail(), request.getPassword());
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request.getEmail(), request.getPassword());
 
-    return ResponseEntity.ok(ApiResponse.success(response));
-  }
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }

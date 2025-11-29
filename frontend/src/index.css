@@ -2,15 +2,15 @@
 html,
 body,
 #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  background: transparent; /* Let Layout handle background */
-  color: inherit; /* Let Layout handle text color */
-  font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background: transparent; /* Let Layout handle background */
+    color: inherit; /* Let Layout handle text color */
+    font-family: system-ui, sans-serif;
 }
 
 body {
-  display: block; /* remove flex / place-items */
+    display: block; /* remove flex / place-items */
 }

@@ -46,13 +46,17 @@ dependencies {
 
 spotless {
     java {
-        googleJavaFormat()
+        googleJavaFormat('1.15.0').aosp()
         target 'src/**/*.java'
     }
 }
 
 tasks.named('build') {
     dependsOn 'spotlessApply'
+}
+
+tasks.named('bootJar') {
+    dependsOn tasks.named('spotlessApply')
 }
 
 // tasks.named('test') {

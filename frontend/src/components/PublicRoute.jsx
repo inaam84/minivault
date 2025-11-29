@@ -2,13 +2,13 @@
 import { Navigate } from 'react-router-dom';
 
 export default function PublicRoute({ children }) {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const token = user?.token;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = user?.token;
 
-  if (token) {
-    // Already logged in → redirect to dashboard
-    return <Navigate to="/dashboard" replace />;
-  }
+    if (token) {
+        // Already logged in → redirect to dashboard
+        return <Navigate to="/dashboard" replace />;
+    }
 
-  return children;
+    return children;
 }
