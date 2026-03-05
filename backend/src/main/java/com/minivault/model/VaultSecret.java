@@ -2,9 +2,11 @@ package com.minivault.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "vault_secrets")
@@ -16,8 +18,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class VaultSecret {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    private UUID id;
 
     @Column(name = "secret_key", nullable = false, length = 200)
     private String key;

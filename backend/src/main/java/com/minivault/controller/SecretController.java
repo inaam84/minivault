@@ -10,6 +10,7 @@ import com.minivault.service.AuthService;
 import com.minivault.service.VaultSecretService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,7 @@ public class SecretController {
     }
 
     @GetMapping("/{categoryId}")
-    public ResponseEntity<?> getCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<?> getCategory(@PathVariable UUID categoryId) {
         log.info("Incoming getCategory request for categoryId: {}", categoryId);
 
         Account account = authService.getAuthenticatedAccount();
@@ -63,7 +64,7 @@ public class SecretController {
 
     @PutMapping("/{categoryId}")
     public ResponseEntity<?> updateCategory(
-            @PathVariable Long categoryId,
+            @PathVariable UUID categoryId,
             @Valid @RequestBody UpdateCategoryRequest request) {
         log.info("Incoming updateCategory request for categoryId: {}", categoryId);
 
@@ -74,7 +75,7 @@ public class SecretController {
     }
 
     @DeleteMapping("/{categoryId}")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<?> deleteCategory(@PathVariable UUID categoryId) {
         log.info("Incoming deleteCategory request for categoryId: {}", categoryId);
 
         Account account = authService.getAuthenticatedAccount();
@@ -84,7 +85,7 @@ public class SecretController {
     }
 
     @DeleteMapping("/secret/{secretId}")
-    public ResponseEntity<?> deleteSecret(@PathVariable Long secretId) {
+    public ResponseEntity<?> deleteSecret(@PathVariable UUID secretId) {
         log.info("Incoming deleteSecret request for secretId: {}", secretId);
 
         Account account = authService.getAuthenticatedAccount();

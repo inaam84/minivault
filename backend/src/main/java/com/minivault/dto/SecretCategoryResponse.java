@@ -3,6 +3,7 @@ package com.minivault.dto;
 import com.minivault.model.SecretCategory;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class SecretCategoryResponse {
-    private Long id;
+    private UUID id;
     private String path;
     private List<SecretItemResponse> secrets;
     private Instant createdAt;
@@ -39,7 +40,7 @@ public class SecretCategoryResponse {
     @NoArgsConstructor
     @Builder
     public static class SecretItemResponse {
-        private Long id;
+        private UUID id;
         private String key;
         private String value;
         private Instant createdAt;

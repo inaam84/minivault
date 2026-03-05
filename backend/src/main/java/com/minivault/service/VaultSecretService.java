@@ -5,6 +5,7 @@ import com.minivault.dto.UpdateCategoryRequest;
 import com.minivault.model.*;
 import com.minivault.repository.*;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -72,7 +73,7 @@ public class VaultSecretService {
     }
 
     @Transactional(readOnly = true)
-    public SecretCategory getCategoryById(Long categoryId, Account account) {
+    public SecretCategory getCategoryById(UUID categoryId, Account account) {
         log.info("Fetching category {} for account {}", categoryId, account.getId());
 
         SecretCategory category = categoryRepo.findById(categoryId)
@@ -90,7 +91,7 @@ public class VaultSecretService {
 
     @Transactional
     public SecretCategory updateCategory(
-            Long categoryId, Account account, UpdateCategoryRequest request) {
+            UUID categoryId, Account account, UpdateCategoryRequest request) {
         log.info("Updating category {} for account {}", categoryId, account.getId());
 
         SecretCategory category = getCategoryById(categoryId, account);
@@ -129,7 +130,7 @@ public class VaultSecretService {
     }
 
     @Transactional
-    public void deleteCategoryById(Long categoryId, Account account) {
+    public void deleteCategoryById(UUID categoryId, Account account) {
         log.info("Deleting category {} for account {}", categoryId, account.getId());
 
         SecretCategory category = getCategoryById(categoryId, account);
@@ -139,7 +140,7 @@ public class VaultSecretService {
     }
 
     @Transactional
-    public void deleteSecretById(Long secretId, Account account) {
+    public void deleteSecretById(UUID secretId, Account account) {
         log.info("Deleting secret {} for account {}", secretId, account.getId());
 
         VaultSecret secret = secretRepo.findById(secretId)
