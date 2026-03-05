@@ -12,3 +12,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+
+# Encryption configuration
+encryption:
+  key: ${ENCRYPTION_KEY:}  # Set via environment variable for production
+

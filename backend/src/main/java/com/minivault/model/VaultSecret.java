@@ -1,5 +1,6 @@
 package com.minivault.model;
 
+import com.minivault.util.SecretValueConverter;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class VaultSecret {
     private String key;
 
     @Column(name = "secret_value", nullable = false, columnDefinition = "TEXT")
+    @Convert(converter = SecretValueConverter.class)
     private String value;
 
     // Link to category
