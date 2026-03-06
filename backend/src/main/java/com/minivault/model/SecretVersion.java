@@ -1,40 +1,38 @@
 package com.minivault.model;
 
+import com.minivault.util.SecretValueConverter;
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.Set;
 import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Table(name = "secret_categories")
+@Table(name = "secret_versions")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SecretCategory {
+public class SecretVersion {
 
     @Id
     @UuidGenerator
     private UUID id;
 
-    @Column(nullable = false, length = 200)
-    private String path;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @JoinColumn(name = "secret_id", nullable = false)
+    private Secret secret;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Secret> secrets;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    @Convert(converter = SecretValueConverter.class)
+    private String value;
+
+    @Column(nullable = false)
+    private int version;
 
     @CreationTimestamp
     @Column(updatable = false)
     private Instant createdAt;
-
-    @UpdateTimestamp private Instant updatedAt;
 }

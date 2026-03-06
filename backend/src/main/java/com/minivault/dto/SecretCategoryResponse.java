@@ -1,7 +1,10 @@
 package com.minivault.dto;
 
+import com.minivault.model.Secret;
 import com.minivault.model.SecretCategory;
+import com.minivault.model.SecretVersion;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -46,15 +49,19 @@ public class SecretCategoryResponse {
         private Instant createdAt;
         private Instant updatedAt;
 
-        public static SecretItemResponse fromEntity(com.minivault.model.VaultSecret secret) {
+        public static SecretItemResponse fromEntity(Secret secret) {
+            SecretVersion latest = secret.getVersions() != null && !secret.getVersions().isEmpty()
+                ? secret.getVersions().stream()
+                    .max(Comparator.comparing(SecretVersion::getCreatedAt))
+                    .orElse(null)
+                : null;
             return SecretItemResponse.builder()
                     .id(secret.getId())
                     .key(secret.getKey())
-                    .value(secret.getValue())
+                    .value(latest != null ? latest.getValue() : null)
                     .createdAt(secret.getCreatedAt())
-                    .updatedAt(secret.getUpdatedAt())
+                    .updatedAt(latest != null ? latest.getCreatedAt() : null)
                     .build();
         }
     }
 }
-

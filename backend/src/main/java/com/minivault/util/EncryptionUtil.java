@@ -40,7 +40,7 @@ public class EncryptionUtil {
                     System.arraycopy(decodedKey, 0, keyBytes, 0, decodedKey.length);
                 }
 
-                this.secretKey = new SecretKeySpec(keyBytes, 0, keyBytes.length, ENCRYPTION_ALGORITHM);
+                this.secretKey = new SecretKeySpec(keyBytes, ENCRYPTION_ALGORITHM);
                 log.info("Encryption key loaded from environment variable (length: {} bytes)", decodedKey.length);
             } else {
                 // Generate a new random key if not provided

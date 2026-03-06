@@ -2,9 +2,12 @@ package com.minivault.service;
 
 import com.minivault.dto.CreateCategoryRequest;
 import com.minivault.dto.UpdateCategoryRequest;
+import com.minivault.dto.UpdateSecretRequest;
 import com.minivault.model.*;
 import com.minivault.repository.*;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class VaultSecretService {
+public class SecretService {
     private final SecretCategoryRepository categoryRepo;
-    private final VaultSecretRepository secretRepo;
+    private final SecretRepository secretRepo;
+    private final SecretVersionRepository versionRepo;
 
     @Transactional
     public SecretCategory createCategoryWithSecrets(
@@ -48,15 +52,21 @@ public class VaultSecretService {
 
             log.info("Adding secret {} for category {}", item.getKey(), category.getId());
 
-            VaultSecret secret =
-                    VaultSecret.builder()
-                            .key(item.getKey())
-                            .value(item.getValue())
-                            .category(category)
-                            .account(account)
-                            .build();
+            Secret secret = Secret.builder()
+                    .key(item.getKey())
+                    .category(category)
+                    .account(account)
+                    .build();
 
-            secretRepo.save(secret);
+            secret = secretRepo.save(secret);
+
+            SecretVersion version = SecretVersion.builder()
+                    .secret(secret)
+                    .value(item.getValue())
+                    .version(1)
+                    .build();
+
+            versionRepo.save(version);
         }
 
         log.info("All secrets saved for category {}", category.getId());
@@ -107,20 +117,40 @@ public class VaultSecretService {
             category.setPath(request.getPath());
         }
 
-        // Clear existing secrets and add new ones
-        category.getSecrets().clear();
-
+        // For each secret item, find or create Secret, and create new version
         for (UpdateCategoryRequest.SecretItem item : request.getSecrets()) {
             log.info("Adding/updating secret {} for category {}", item.getKey(), categoryId);
 
-            VaultSecret secret = VaultSecret.builder()
-                    .key(item.getKey())
+            Secret secret = category.getSecrets().stream()
+                    .filter(s -> s.getKey().equals(item.getKey()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (secret == null) {
+                secret = Secret.builder()
+                        .key(item.getKey())
+                        .category(category)
+                        .account(account)
+                        .build();
+                secret = secretRepo.save(secret);
+                category.getSecrets().add(secret);
+            }
+
+            // Get next version number
+            int nextVersion = secret.getVersions() != null && !secret.getVersions().isEmpty()
+                ? secret.getVersions().stream()
+                    .mapToInt(SecretVersion::getVersion)
+                    .max()
+                    .orElse(0) + 1
+                : 1;
+
+            SecretVersion version = SecretVersion.builder()
+                    .secret(secret)
                     .value(item.getValue())
-                    .category(category)
-                    .account(account)
+                    .version(nextVersion)
                     .build();
 
-            category.getSecrets().add(secret);
+            versionRepo.save(version);
         }
 
         SecretCategory updated = categoryRepo.save(category);
@@ -143,7 +173,7 @@ public class VaultSecretService {
     public void deleteSecretById(UUID secretId, Account account) {
         log.info("Deleting secret {} for account {}", secretId, account.getId());
 
-        VaultSecret secret = secretRepo.findById(secretId)
+        Secret secret = secretRepo.findById(secretId)
                 .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
 
         // Verify ownership
@@ -155,5 +185,52 @@ public class VaultSecretService {
 
         secretRepo.delete(secret);
         log.info("Secret {} deleted successfully", secretId);
+    }
+
+    @Transactional(readOnly = true)
+    public Secret getSecretById(UUID secretId, Account account) {
+        log.info("Fetching secret {} for account {}", secretId, account.getId());
+
+        Secret secret = secretRepo.findById(secretId)
+                .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
+
+        // Verify ownership
+        if (!secret.getAccount().getId().equals(account.getId())) {
+            log.warn("Unauthorized access attempt to secret {} by account {}",
+                    secretId, account.getId());
+            throw new IllegalArgumentException("Unauthorized access to secret");
+        }
+
+        return secret;
+    }
+
+    @Transactional
+    public Secret updateSecret(UUID secretId, Account account, UpdateSecretRequest request) {
+        log.info("Updating secret {} for account {}", secretId, account.getId());
+
+        Secret secret = getSecretById(secretId, account);
+
+        // Get next version number
+        int nextVersion = secret.getVersions() != null && !secret.getVersions().isEmpty()
+            ? secret.getVersions().stream()
+                .mapToInt(SecretVersion::getVersion)
+                .max()
+                .orElse(0) + 1
+            : 1;
+
+        SecretVersion version = SecretVersion.builder()
+                .secret(secret)
+                .value(request.getValue())
+                .version(nextVersion)
+                .build();
+
+        versionRepo.save(version);
+
+        // keep entity graph consistent
+        secret.getVersions().add(version);
+
+        log.info("Secret {} updated to version {}", secretId, nextVersion);
+
+        return secret;
     }
 }

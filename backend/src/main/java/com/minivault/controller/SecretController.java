@@ -4,10 +4,13 @@ import com.minivault.dto.ApiResponse;
 import com.minivault.dto.CreateCategoryRequest;
 import com.minivault.dto.SecretCategoryResponse;
 import com.minivault.dto.UpdateCategoryRequest;
+import com.minivault.dto.SecretResponse;
+import com.minivault.dto.UpdateSecretRequest;
 import com.minivault.model.Account;
+import com.minivault.model.Secret;
 import com.minivault.model.SecretCategory;
 import com.minivault.service.AuthService;
-import com.minivault.service.VaultSecretService;
+import com.minivault.service.SecretService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 public class SecretController {
-    private final VaultSecretService secretService;
+    private final SecretService secretService;
     private final AuthService authService;
 
     @PostMapping("/category")
@@ -82,6 +85,28 @@ public class SecretController {
         secretService.deleteCategoryById(categoryId, account);
 
         return ResponseEntity.ok(ApiResponse.success("Category deleted successfully"));
+    }
+
+    @GetMapping("/secret/{secretId}")
+    public ResponseEntity<?> getSecret(@PathVariable UUID secretId) {
+        log.info("Incoming getSecret request for secretId: {}", secretId);
+
+        Account account = authService.getAuthenticatedAccount();
+        Secret secret = secretService.getSecretById(secretId, account);
+
+        return ResponseEntity.ok(ApiResponse.success(SecretResponse.fromEntity(secret)));
+    }
+
+    @PutMapping("/secret/{secretId}")
+    public ResponseEntity<?> updateSecret(
+            @PathVariable UUID secretId,
+            @Valid @RequestBody UpdateSecretRequest request) {
+        log.info("Incoming updateSecret request for secretId: {}", secretId);
+
+        Account account = authService.getAuthenticatedAccount();
+        Secret secret = secretService.updateSecret(secretId, account, request);
+
+        return ResponseEntity.ok(ApiResponse.success(SecretResponse.fromEntity(secret)));
     }
 
     @DeleteMapping("/secret/{secretId}")
