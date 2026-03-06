@@ -24,6 +24,10 @@ public class Secret {
     @Column(name = "`key`", nullable = false, length = 200)
     private String key;
 
+    @Builder.Default
+    @Column(name = "current_version", nullable = false)
+    private Integer currentVersion = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private SecretCategory category;
@@ -33,6 +37,7 @@ public class Secret {
     private Account account;
 
     @OneToMany(mappedBy = "secret", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("version DESC")
     private List<SecretVersion> versions;
 
     @CreationTimestamp

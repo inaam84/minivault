@@ -5,10 +5,9 @@ import com.minivault.dto.UpdateCategoryRequest;
 import com.minivault.dto.UpdateSecretRequest;
 import com.minivault.model.*;
 import com.minivault.repository.*;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+
+import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,6 +47,8 @@ public class SecretService {
         log.info("Category saved with id {}", category.getId());
 
         // Save secrets
+        category.setSecrets(new HashSet<>());
+
         for (CreateCategoryRequest.SecretItem item : request.getSecrets()) {
 
             log.info("Adding secret {} for category {}", item.getKey(), category.getId());
@@ -67,6 +68,13 @@ public class SecretService {
                     .build();
 
             versionRepo.save(version);
+
+            /// Add secret to category (Set)
+            category.getSecrets().add(secret);
+
+            // Add version to secret (List)
+            secret.setVersions(new ArrayList<>());
+            secret.getVersions().add(version);
         }
 
         log.info("All secrets saved for category {}", category.getId());
@@ -208,26 +216,30 @@ public class SecretService {
     public Secret updateSecret(UUID secretId, Account account, UpdateSecretRequest request) {
         log.info("Updating secret {} for account {}", secretId, account.getId());
 
+        // Fetch the secret and verify ownership
         Secret secret = getSecretById(secretId, account);
 
-        // Get next version number
-        int nextVersion = secret.getVersions() != null && !secret.getVersions().isEmpty()
-            ? secret.getVersions().stream()
-                .mapToInt(SecretVersion::getVersion)
-                .max()
-                .orElse(0) + 1
-            : 1;
+        // Increment the version
+        int nextVersion = secret.getCurrentVersion() + 1;
 
+        // Create new SecretVersion
         SecretVersion version = SecretVersion.builder()
                 .secret(secret)
                 .value(request.getValue())
                 .version(nextVersion)
                 .build();
 
+        // Persist the new version
         versionRepo.save(version);
 
-        // keep entity graph consistent
-        secret.getVersions().add(version);
+        // Update secret's currentVersion
+        secret.setCurrentVersion(nextVersion);
+
+        // Ensure the versions list in memory stays consistent
+        secret.getVersions().add(0, version);
+
+        // Save secret to persist the new currentVersion
+        secretRepo.save(secret);
 
         log.info("Secret {} updated to version {}", secretId, nextVersion);
 
