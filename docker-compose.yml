@@ -35,6 +35,7 @@ services:
       DB_NAME: minivault
       DB_USERNAME: app
       DB_PASSWORD: app
+      ENCRYPTION_KEY: "dGVzdC1lbmNyeXB0aW9uLWtleS1mb3ItZGV2LXB1cnBvc2VzLW9ubHk="
     depends_on:
       db:
         condition: service_healthy

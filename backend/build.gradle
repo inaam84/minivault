@@ -36,8 +36,8 @@ dependencies {
     implementation 'com.mysql:mysql-connector-j:8.1.0'
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.32'
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
     // Testing
     testImplementation 'com.h2database:h2'

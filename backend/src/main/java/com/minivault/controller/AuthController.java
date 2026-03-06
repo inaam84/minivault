@@ -36,4 +36,15 @@ public class AuthController {
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout() {
+        try {
+            authService.logout();
+            return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.failure("UNAUTHORIZED", "Not logged in"));
+        }
+    }
 }

@@ -27,9 +27,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        String requestPath = request.getRequestURI();
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            logger.debug("Processing JWT token for path: {}", requestPath);
 
             try {
                 String username = jwtUtil.extractUsername(token);
@@ -39,12 +41,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(
                                     username, null, Collections.emptyList());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.debug("JWT authenticated user: {} for path: {}", username, requestPath);
+                } else {
+                    logger.warn("JWT validation failed for path: {}", requestPath);
+                    SecurityContextHolder.clearContext();
                 }
             } catch (Exception ex) {
-                // Log and clear security context, do not break the request
-                logger.warn("JWT validation failed", ex);
+                logger.warn("JWT validation failed for path: {}", requestPath, ex);
                 SecurityContextHolder.clearContext();
             }
+        } else {
+            logger.debug("No JWT token found in request for path: {}", requestPath);
         }
 
         // Continue filter chain regardless of token status
