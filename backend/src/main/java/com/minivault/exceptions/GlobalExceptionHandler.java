@@ -79,6 +79,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("INVALID_STATE", ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        logger.warn("Invalid argument: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
+    }
+
     // Fallback for unexpected errors
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneral(Exception ex) {

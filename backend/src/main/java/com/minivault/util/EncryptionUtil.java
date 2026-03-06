@@ -29,10 +29,19 @@ public class EncryptionUtil {
             if (encryptionKeyString != null && !encryptionKeyString.isEmpty()) {
                 // Load key from environment variable (Base64 encoded)
                 byte[] decodedKey = Base64.getDecoder().decode(encryptionKeyString);
-                this.secretKey =
-                        new SecretKeySpec(
-                                decodedKey, 0, decodedKey.length, 0, ENCRYPTION_ALGORITHM);
-                log.info("Encryption key loaded from environment variable");
+
+                // Ensure key is exactly 32 bytes for AES-256
+                byte[] keyBytes = new byte[32];
+                if (decodedKey.length >= 32) {
+                    // If key is longer, take first 32 bytes
+                    System.arraycopy(decodedKey, 0, keyBytes, 0, 32);
+                } else {
+                    // If key is shorter, copy it and let the rest be zeros (padded)
+                    System.arraycopy(decodedKey, 0, keyBytes, 0, decodedKey.length);
+                }
+
+                this.secretKey = new SecretKeySpec(keyBytes, 0, keyBytes.length, ENCRYPTION_ALGORITHM);
+                log.info("Encryption key loaded from environment variable (length: {} bytes)", decodedKey.length);
             } else {
                 // Generate a new random key if not provided
                 this.secretKey = generateKey();
