@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,7 +35,14 @@ public class GlobalExceptionHandler {
                 ex.getBindingResult().getFieldErrors().stream()
                         .map(err -> err.getField() + ": " + err.getDefaultMessage())
                         .findFirst()
-                        .orElse("Invalid input");
+                        .orElseGet(
+                                () ->
+                                        ex.getBindingResult().getGlobalErrors().stream()
+                                                .map(ObjectError::getDefaultMessage)
+                                                .filter(msg -> msg != null && !msg.isBlank()) // <--
+                                                // filter null/blank
+                                                .findFirst()
+                                                .orElse("Invalid input"));
 
         logger.warn("Validation failed: {}", errorMessage);
         return ResponseEntity.badRequest()
@@ -58,7 +66,8 @@ public class GlobalExceptionHandler {
 
     // Authentication exceptions
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex) {
+    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(
+            AuthenticationException ex) {
         logger.warn("Authentication failed: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure("AUTHENTICATION_FAILED", "Authentication failed"));
@@ -80,7 +89,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(
+            IllegalArgumentException ex) {
         logger.warn("Invalid argument: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));

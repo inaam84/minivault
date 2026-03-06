@@ -6,10 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Hibernate converter that automatically encrypts secret values before storing
- * in database and decrypts them when loading from database.
+ * Hibernate converter that automatically encrypts secret values before storing in database and
+ * decrypts them when loading from database.
  *
- * Usage: Add @Convert(converter = SecretValueConverter.class) to entity field
+ * <p>Usage: Add @Convert(converter = SecretValueConverter.class) to entity field
  */
 @Converter(autoApply = false)
 @Slf4j
@@ -17,17 +17,15 @@ public class SecretValueConverter implements AttributeConverter<String, String> 
 
     private static EncryptionUtil encryptionUtil;
 
-    /**
-     * This setter is called by Spring to inject the EncryptionUtil bean
-     */
+    /** This setter is called by Spring to inject the EncryptionUtil bean */
     @Autowired
     public void setEncryptionUtil(EncryptionUtil encryptionUtil) {
         SecretValueConverter.encryptionUtil = encryptionUtil;
     }
 
     /**
-     * Called when saving to database - converts entity attribute to database column
-     * This encrypts the plain text value
+     * Called when saving to database - converts entity attribute to database column This encrypts
+     * the plain text value
      *
      * @param attribute The plain text secret value
      * @return Encrypted value to store in database
@@ -49,8 +47,8 @@ public class SecretValueConverter implements AttributeConverter<String, String> 
     }
 
     /**
-     * Called when loading from database - converts database column to entity attribute
-     * This decrypts the encrypted value
+     * Called when loading from database - converts database column to entity attribute This
+     * decrypts the encrypted value
      *
      * @param dbData The encrypted value from database
      * @return Decrypted plain text value
@@ -71,4 +69,3 @@ public class SecretValueConverter implements AttributeConverter<String, String> 
         }
     }
 }
-

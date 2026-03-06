@@ -50,11 +50,12 @@ public class SecretCategoryResponse {
         private Instant updatedAt;
 
         public static SecretItemResponse fromEntity(Secret secret) {
-            SecretVersion latest = secret.getVersions() != null && !secret.getVersions().isEmpty()
-                ? secret.getVersions().stream()
-                    .max(Comparator.comparing(SecretVersion::getCreatedAt))
-                    .orElse(null)
-                : null;
+            SecretVersion latest =
+                    secret.getVersions() != null && !secret.getVersions().isEmpty()
+                            ? secret.getVersions().stream()
+                                    .max(Comparator.comparing(SecretVersion::getCreatedAt))
+                                    .orElse(null)
+                            : null;
             return SecretItemResponse.builder()
                     .id(secret.getId())
                     .key(secret.getKey())

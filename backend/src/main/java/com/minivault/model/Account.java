@@ -14,9 +14,7 @@ import org.hibernate.annotations.UuidGenerator;
 @AllArgsConstructor
 @Builder
 public class Account {
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;

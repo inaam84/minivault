@@ -18,9 +18,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Builder
 public class SecretCategory {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @Column(nullable = false, length = 200)
     private String path;
