@@ -78,4 +78,15 @@ public class AuthService {
                 .findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
+
+    public void logout() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("No active session to logout from");
+        }
+
+        log.info("User {} logged out successfully", authentication.getName());
+        SecurityContextHolder.clearContext();
+    }
 }
