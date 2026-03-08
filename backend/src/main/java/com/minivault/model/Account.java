@@ -14,9 +14,7 @@ import org.hibernate.annotations.UuidGenerator;
 @AllArgsConstructor
 @Builder
 public class Account {
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -33,4 +31,7 @@ public class Account {
     public void prePersist() {
         if (createdAt == null) createdAt = Instant.now();
     }
+
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean verified;
 }

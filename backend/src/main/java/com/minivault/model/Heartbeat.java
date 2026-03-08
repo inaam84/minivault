@@ -12,9 +12,7 @@ import org.hibernate.annotations.UuidGenerator;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Heartbeat {
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     private String note;
 

@@ -6,7 +6,9 @@ import com.minivault.dto.LoginResponse;
 import com.minivault.dto.SignupRequest;
 import com.minivault.dto.SignupResponse;
 import com.minivault.service.AuthService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(
-            @Valid @RequestBody SignupRequest request) {
+            @Valid @RequestBody SignupRequest request) throws IOException, MessagingException {
         SignupResponse response = authService.signup(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));

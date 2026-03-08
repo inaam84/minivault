@@ -2,11 +2,11 @@ package com.minivault.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-import java.util.List;
 
 @Entity
 @Table(name = "secrets")
@@ -17,12 +17,14 @@ import java.util.List;
 @Builder
 public class Secret {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @Column(name = "`key`", nullable = false, length = 200)
     private String key;
+
+    @Builder.Default
+    @Column(name = "current_version", nullable = false)
+    private Integer currentVersion = 1;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -33,6 +35,7 @@ public class Secret {
     private Account account;
 
     @OneToMany(mappedBy = "secret", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("version DESC")
     private List<SecretVersion> versions;
 
     @CreationTimestamp

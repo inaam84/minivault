@@ -12,8 +12,22 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 54c184d13de458
+    password: c1326f1a390407
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 # Encryption configuration
 encryption:
   key: ${ENCRYPTION_KEY:}  # Set via environment variable for production
 
+otp:
+  cleanup:
+    cron: "0 0 * * * *"

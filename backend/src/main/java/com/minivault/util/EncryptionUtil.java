@@ -1,17 +1,17 @@
 package com.minivault.util;
 
+import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Encryption utility for encrypting and decrypting secret values.
- * Uses AES encryption algorithm for security.
+ * Encryption utility for encrypting and decrypting secret values. Uses AES encryption algorithm for
+ * security.
  */
 @Component
 @Slf4j
@@ -21,9 +21,7 @@ public class EncryptionUtil {
     private static final int KEY_SIZE = 256; // 256-bit key
     private SecretKey secretKey;
 
-    /**
-     * Initialize encryption key from environment variable or generate a new one
-     */
+    /** Initialize encryption key from environment variable or generate a new one */
     public EncryptionUtil(@Value("${encryption.key:}") String encryptionKeyString) {
         try {
             if (encryptionKeyString != null && !encryptionKeyString.isEmpty()) {
@@ -41,7 +39,9 @@ public class EncryptionUtil {
                 }
 
                 this.secretKey = new SecretKeySpec(keyBytes, ENCRYPTION_ALGORITHM);
-                log.info("Encryption key loaded from environment variable (length: {} bytes)", decodedKey.length);
+                log.info(
+                        "Encryption key loaded from environment variable (length: {} bytes)",
+                        decodedKey.length);
             } else {
                 // Generate a new random key if not provided
                 this.secretKey = generateKey();
@@ -55,9 +55,7 @@ public class EncryptionUtil {
         }
     }
 
-    /**
-     * Generate a new random encryption key
-     */
+    /** Generate a new random encryption key */
     private SecretKey generateKey() throws Exception {
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM);
         keyGenerator.init(KEY_SIZE);
@@ -110,8 +108,8 @@ public class EncryptionUtil {
     }
 
     /**
-     * Generate and print a new encryption key for configuration
-     * Call this once to generate a key, then set it in environment variables
+     * Generate and print a new encryption key for configuration Call this once to generate a key,
+     * then set it in environment variables
      */
     public String generateAndEncodeKey() {
         try {
@@ -125,4 +123,3 @@ public class EncryptionUtil {
         }
     }
 }
-

@@ -32,4 +32,3 @@ public class UpdateCategoryRequest {
         private String value;
     }
 }
-

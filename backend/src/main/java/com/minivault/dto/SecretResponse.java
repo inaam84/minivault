@@ -25,18 +25,25 @@ public class SecretResponse {
     private List<VersionInfo> versions;
 
     public static SecretResponse fromEntity(Secret secret) {
-        SecretVersion latest = secret.getVersions() != null && !secret.getVersions().isEmpty()
-            ? secret.getVersions().stream()
-                .max(Comparator.comparing(SecretVersion::getCreatedAt))
-                .orElse(null)
-            : null;
+        SecretVersion latest =
+                secret.getVersions() != null && !secret.getVersions().isEmpty()
+                        ? secret.getVersions().stream()
+                                .max(Comparator.comparing(SecretVersion::getCreatedAt))
+                                .orElse(null)
+                        : null;
 
-        List<VersionInfo> versionInfos = secret.getVersions() != null
-            ? secret.getVersions().stream()
-                .map(v -> new VersionInfo(v.getId(), v.getVersion(), v.getCreatedAt()))
-                .sorted(Comparator.comparing(VersionInfo::getCreatedAt).reversed())
-                .toList()
-            : List.of();
+        List<VersionInfo> versionInfos =
+                secret.getVersions() != null
+                        ? secret.getVersions().stream()
+                                .map(
+                                        v ->
+                                                new VersionInfo(
+                                                        v.getId(),
+                                                        v.getVersion(),
+                                                        v.getCreatedAt()))
+                                .sorted(Comparator.comparing(VersionInfo::getCreatedAt).reversed())
+                                .toList()
+                        : List.of();
 
         return SecretResponse.builder()
                 .id(secret.getId())

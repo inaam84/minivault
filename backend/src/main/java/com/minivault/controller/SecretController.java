@@ -1,11 +1,6 @@
 package com.minivault.controller;
 
-import com.minivault.dto.ApiResponse;
-import com.minivault.dto.CreateCategoryRequest;
-import com.minivault.dto.SecretCategoryResponse;
-import com.minivault.dto.UpdateCategoryRequest;
-import com.minivault.dto.SecretResponse;
-import com.minivault.dto.UpdateSecretRequest;
+import com.minivault.dto.*;
 import com.minivault.model.Account;
 import com.minivault.model.Secret;
 import com.minivault.model.SecretCategory;
@@ -48,9 +43,8 @@ public class SecretController {
         Account account = authService.getAuthenticatedAccount();
 
         List<SecretCategory> categories = secretService.getAllCategoriesForAccount(account);
-        List<SecretCategoryResponse> responses = categories.stream()
-                .map(SecretCategoryResponse::fromEntity)
-                .toList();
+        List<SecretCategoryResponse> responses =
+                categories.stream().map(SecretCategoryResponse::fromEntity).toList();
 
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
@@ -67,8 +61,7 @@ public class SecretController {
 
     @PutMapping("/{categoryId}")
     public ResponseEntity<?> updateCategory(
-            @PathVariable UUID categoryId,
-            @Valid @RequestBody UpdateCategoryRequest request) {
+            @PathVariable UUID categoryId, @Valid @RequestBody UpdateCategoryRequest request) {
         log.info("Incoming updateCategory request for categoryId: {}", categoryId);
 
         Account account = authService.getAuthenticatedAccount();
@@ -99,8 +92,7 @@ public class SecretController {
 
     @PutMapping("/secret/{secretId}")
     public ResponseEntity<?> updateSecret(
-            @PathVariable UUID secretId,
-            @Valid @RequestBody UpdateSecretRequest request) {
+            @PathVariable UUID secretId, @Valid @RequestBody UpdateSecretRequest request) {
         log.info("Incoming updateSecret request for secretId: {}", secretId);
 
         Account account = authService.getAuthenticatedAccount();

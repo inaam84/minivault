@@ -5,10 +5,7 @@ import com.minivault.dto.UpdateCategoryRequest;
 import com.minivault.dto.UpdateSecretRequest;
 import com.minivault.model.*;
 import com.minivault.repository.*;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,25 +45,32 @@ public class SecretService {
         log.info("Category saved with id {}", category.getId());
 
         // Save secrets
+        category.setSecrets(new HashSet<>());
+
         for (CreateCategoryRequest.SecretItem item : request.getSecrets()) {
 
             log.info("Adding secret {} for category {}", item.getKey(), category.getId());
 
-            Secret secret = Secret.builder()
-                    .key(item.getKey())
-                    .category(category)
-                    .account(account)
-                    .build();
+            Secret secret =
+                    Secret.builder().key(item.getKey()).category(category).account(account).build();
 
             secret = secretRepo.save(secret);
 
-            SecretVersion version = SecretVersion.builder()
-                    .secret(secret)
-                    .value(item.getValue())
-                    .version(1)
-                    .build();
+            SecretVersion version =
+                    SecretVersion.builder()
+                            .secret(secret)
+                            .value(item.getValue())
+                            .version(1)
+                            .build();
 
             versionRepo.save(version);
+
+            /// Add secret to category (Set)
+            category.getSecrets().add(secret);
+
+            // Add version to secret (List)
+            secret.setVersions(new ArrayList<>());
+            secret.getVersions().add(version);
         }
 
         log.info("All secrets saved for category {}", category.getId());
@@ -86,13 +90,17 @@ public class SecretService {
     public SecretCategory getCategoryById(UUID categoryId, Account account) {
         log.info("Fetching category {} for account {}", categoryId, account.getId());
 
-        SecretCategory category = categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+        SecretCategory category =
+                categoryRepo
+                        .findById(categoryId)
+                        .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         // Verify ownership
         if (!category.getAccount().getId().equals(account.getId())) {
-            log.warn("Unauthorized access attempt to category {} by account {}",
-                    categoryId, account.getId());
+            log.warn(
+                    "Unauthorized access attempt to category {} by account {}",
+                    categoryId,
+                    account.getId());
             throw new IllegalArgumentException("Unauthorized access to category");
         }
 
@@ -121,34 +129,39 @@ public class SecretService {
         for (UpdateCategoryRequest.SecretItem item : request.getSecrets()) {
             log.info("Adding/updating secret {} for category {}", item.getKey(), categoryId);
 
-            Secret secret = category.getSecrets().stream()
-                    .filter(s -> s.getKey().equals(item.getKey()))
-                    .findFirst()
-                    .orElse(null);
+            Secret secret =
+                    category.getSecrets().stream()
+                            .filter(s -> s.getKey().equals(item.getKey()))
+                            .findFirst()
+                            .orElse(null);
 
             if (secret == null) {
-                secret = Secret.builder()
-                        .key(item.getKey())
-                        .category(category)
-                        .account(account)
-                        .build();
+                secret =
+                        Secret.builder()
+                                .key(item.getKey())
+                                .category(category)
+                                .account(account)
+                                .build();
                 secret = secretRepo.save(secret);
                 category.getSecrets().add(secret);
             }
 
             // Get next version number
-            int nextVersion = secret.getVersions() != null && !secret.getVersions().isEmpty()
-                ? secret.getVersions().stream()
-                    .mapToInt(SecretVersion::getVersion)
-                    .max()
-                    .orElse(0) + 1
-                : 1;
+            int nextVersion =
+                    secret.getVersions() != null && !secret.getVersions().isEmpty()
+                            ? secret.getVersions().stream()
+                                            .mapToInt(SecretVersion::getVersion)
+                                            .max()
+                                            .orElse(0)
+                                    + 1
+                            : 1;
 
-            SecretVersion version = SecretVersion.builder()
-                    .secret(secret)
-                    .value(item.getValue())
-                    .version(nextVersion)
-                    .build();
+            SecretVersion version =
+                    SecretVersion.builder()
+                            .secret(secret)
+                            .value(item.getValue())
+                            .version(nextVersion)
+                            .build();
 
             versionRepo.save(version);
         }
@@ -173,13 +186,17 @@ public class SecretService {
     public void deleteSecretById(UUID secretId, Account account) {
         log.info("Deleting secret {} for account {}", secretId, account.getId());
 
-        Secret secret = secretRepo.findById(secretId)
-                .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
+        Secret secret =
+                secretRepo
+                        .findById(secretId)
+                        .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
 
         // Verify ownership
         if (!secret.getAccount().getId().equals(account.getId())) {
-            log.warn("Unauthorized delete attempt on secret {} by account {}",
-                    secretId, account.getId());
+            log.warn(
+                    "Unauthorized delete attempt on secret {} by account {}",
+                    secretId,
+                    account.getId());
             throw new IllegalArgumentException("Unauthorized access to secret");
         }
 
@@ -191,13 +208,17 @@ public class SecretService {
     public Secret getSecretById(UUID secretId, Account account) {
         log.info("Fetching secret {} for account {}", secretId, account.getId());
 
-        Secret secret = secretRepo.findById(secretId)
-                .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
+        Secret secret =
+                secretRepo
+                        .findById(secretId)
+                        .orElseThrow(() -> new IllegalArgumentException("Secret not found"));
 
         // Verify ownership
         if (!secret.getAccount().getId().equals(account.getId())) {
-            log.warn("Unauthorized access attempt to secret {} by account {}",
-                    secretId, account.getId());
+            log.warn(
+                    "Unauthorized access attempt to secret {} by account {}",
+                    secretId,
+                    account.getId());
             throw new IllegalArgumentException("Unauthorized access to secret");
         }
 
@@ -208,26 +229,31 @@ public class SecretService {
     public Secret updateSecret(UUID secretId, Account account, UpdateSecretRequest request) {
         log.info("Updating secret {} for account {}", secretId, account.getId());
 
+        // Fetch the secret and verify ownership
         Secret secret = getSecretById(secretId, account);
 
-        // Get next version number
-        int nextVersion = secret.getVersions() != null && !secret.getVersions().isEmpty()
-            ? secret.getVersions().stream()
-                .mapToInt(SecretVersion::getVersion)
-                .max()
-                .orElse(0) + 1
-            : 1;
+        // Increment the version
+        int nextVersion = secret.getCurrentVersion() + 1;
 
-        SecretVersion version = SecretVersion.builder()
-                .secret(secret)
-                .value(request.getValue())
-                .version(nextVersion)
-                .build();
+        // Create new SecretVersion
+        SecretVersion version =
+                SecretVersion.builder()
+                        .secret(secret)
+                        .value(request.getValue())
+                        .version(nextVersion)
+                        .build();
 
+        // Persist the new version
         versionRepo.save(version);
 
-        // keep entity graph consistent
-        secret.getVersions().add(version);
+        // Update secret's currentVersion
+        secret.setCurrentVersion(nextVersion);
+
+        // Ensure the versions list in memory stays consistent
+        secret.getVersions().add(0, version);
+
+        // Save secret to persist the new currentVersion
+        secretRepo.save(secret);
 
         log.info("Secret {} updated to version {}", secretId, nextVersion);
 

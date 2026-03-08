@@ -17,9 +17,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Builder
 public class SecretVersion {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "secret_id", nullable = false)

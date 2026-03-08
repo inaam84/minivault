@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Holder for EncryptionUtil to be used by Hibernate converters.
- * Hibernate converters are not Spring-managed beans, so we need this bridge.
+ * Holder for EncryptionUtil to be used by Hibernate converters. Hibernate converters are not
+ * Spring-managed beans, so we need this bridge.
  */
 @Component
 @Slf4j
