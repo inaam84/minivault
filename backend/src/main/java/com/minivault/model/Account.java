@@ -31,4 +31,7 @@ public class Account {
     public void prePersist() {
         if (createdAt == null) createdAt = Instant.now();
     }
+
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean verified;
 }

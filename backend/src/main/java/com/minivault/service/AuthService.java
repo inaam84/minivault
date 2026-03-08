@@ -27,6 +27,8 @@ public class AuthService {
 
     @Autowired JwtUtil jwtUtil;
 
+    @Autowired OtpTokenService otpService;
+
     public LoginResponse login(String email, String password) {
         var accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
@@ -34,13 +36,30 @@ public class AuthService {
         }
 
         var account = accountOpt.get();
+
+        // Check password
         if (!passwordEncoder.matches(password, account.getPassword())) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
+        // Check if account is verified
+        if (!account.isVerified()) {
+            return LoginResponse.builder()
+                    .email(account.getEmail())
+                    .name(account.getName())
+                    .token(null)
+                    .message("Please verify your email via OTP before logging in.")
+                    .build();
+        }
+
         String token = jwtUtil.generateToken(account.getEmail());
 
-        return new LoginResponse(account.getEmail(), account.getName(), token);
+        return LoginResponse.builder()
+                .email(account.getEmail())
+                .name(account.getName())
+                .token(token)
+                .message("Login successful")
+                .build();
     }
 
     public SignupResponse signup(SignupRequest request) {
@@ -53,13 +72,20 @@ public class AuthService {
                         .name(request.getName())
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
+                        .verified(false)
                         .build();
 
         Account savedAccount = accountRepository.save(account);
 
-        String token = jwtUtil.generateToken(account.getEmail());
+        // Send OTP email
+        otpService.sendOtp(savedAccount.getEmail());
 
-        return new SignupResponse(savedAccount.getEmail(), savedAccount.getName(), token);
+        return SignupResponse.builder()
+                .email(savedAccount.getEmail())
+                .name(savedAccount.getName())
+                .token(null) // no JWT yet
+                .message("OTP sent to email for verification")
+                .build();
     }
 
     public Account getAuthenticatedAccount() {
