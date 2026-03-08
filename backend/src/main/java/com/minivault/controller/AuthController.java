@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.mail.MessagingException;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,7 +26,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signup(
-            @Valid @RequestBody SignupRequest request) {
+            @Valid @RequestBody SignupRequest request) throws IOException, MessagingException {
         SignupResponse response = authService.signup(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));

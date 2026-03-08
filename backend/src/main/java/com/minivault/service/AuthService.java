@@ -15,6 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import jakarta.mail.MessagingException;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +65,7 @@ public class AuthService {
                 .build();
     }
 
-    public SignupResponse signup(SignupRequest request) {
+    public SignupResponse signup(SignupRequest request) throws IOException, MessagingException {
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException(request.getEmail());
         }
