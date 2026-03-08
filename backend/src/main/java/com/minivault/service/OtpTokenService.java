@@ -49,7 +49,7 @@ public class OtpTokenService {
 
         otpRepository.save(token);
 
-        emailService.sendOtpEmail(email, otp);
+        emailService.sendOtpEmailHtml(email, account.getName(), otp);
     }
 
     public OtpToken createOtp(Account account) {

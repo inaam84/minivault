@@ -34,7 +34,7 @@ public class OtpTokenController {
 
     @GetMapping("/test-email")
     public String testEmail() {
-        emailService.sendOtpEmail("test@email.com", "123456");
+        emailService.sendOtpEmailHtml("test@email.com", "Inaam", "123456");
         return "Email sent";
     }
 }

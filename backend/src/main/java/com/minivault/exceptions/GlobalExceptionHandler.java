@@ -57,6 +57,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("EMAIL_ALREADY_EXISTS", ex.getMessage()));
     }
 
+    @ExceptionHandler(EmailSendingException.class)
+    public ResponseEntity<ApiResponse<?>> handleEmailError(EmailSendingException ex) {
+        // return 503 Service Unavailable, or 500, with nice message
+        logger.error("Email failure", ex);
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.failure("EMAIL_NOT_SENT", "Email service temporarily unavailable"));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidCredentials(InvalidCredentialsException ex) {
         logger.warn("Invalid credentials: {}", ex.getMessage());
