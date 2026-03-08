@@ -7,7 +7,5 @@ import lombok.Data;
 @Data
 public class RequestOtpRequest {
 
-    @Email
-    @NotBlank
-    private String email;
+    @Email @NotBlank private String email;
 }

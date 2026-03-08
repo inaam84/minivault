@@ -15,9 +15,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Builder
 public class OtpToken {
 
-    @Id
-    @UuidGenerator
-    private UUID id;
+    @Id @UuidGenerator private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)

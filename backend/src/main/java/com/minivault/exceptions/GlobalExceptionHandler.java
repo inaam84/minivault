@@ -61,9 +61,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleEmailError(EmailSendingException ex) {
         // return 503 Service Unavailable, or 500, with nice message
         logger.error("Email failure", ex);
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(ApiResponse.failure("EMAIL_NOT_SENT", "Email service temporarily unavailable"));
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(
+                        ApiResponse.failure(
+                                "EMAIL_NOT_SENT", "Email service temporarily unavailable"));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
@@ -103,6 +104,12 @@ public class GlobalExceptionHandler {
         logger.warn("Invalid argument: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(ApiResponse.failure("INVALID_ARGUMENT", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidOtp(InvalidOtpException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.failure("INVALID_OTP", ex.getMessage()));
     }
 
     // Fallback for unexpected errors

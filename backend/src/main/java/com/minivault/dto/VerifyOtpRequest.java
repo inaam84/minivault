@@ -7,10 +7,7 @@ import lombok.Data;
 @Data
 public class VerifyOtpRequest {
 
-    @Email
-    @NotBlank
-    private String email;
+    @Email @NotBlank private String email;
 
-    @NotBlank
-    private String otp;
+    @NotBlank private String otp;
 }
