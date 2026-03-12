@@ -1,0 +1,193 @@
+name: Develop Branch Pipeline (Post-Merge)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Full Build, Test & Coverage
+  # ─────────────────────────────────────────
+  full-build-and-test:
+    name: Full Build, Test & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Run full build + tests
+        working-directory: backend
+        run: ./gradlew build
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: Generate test coverage report (JaCoCo)
+        working-directory: backend
+        run: ./gradlew jacocoTestReport
+        continue-on-error: true
+        # Add jacoco plugin to build.gradle to enable this:
+        # id 'jacoco' in plugins block
+        # Then: jacocoTestReport { reports { html.required = true } }
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: develop-test-report
+          path: backend/build/reports/tests/test/
+          retention-days: 30
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: develop-coverage-report
+          path: backend/build/reports/jacoco/test/html/
+          retention-days: 30
+
+  # ─────────────────────────────────────────
+  # JOB 2: Full Stack Integration Test
+  # ─────────────────────────────────────────
+  full-stack-integration:
+    name: Full Stack Integration Test
+    runs-on: ubuntu-latest
+    needs: full-build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create .env file for CI
+        run: |
+          cat <<EOF > .env
+          DB_HOST=db
+          DB_PORT=3306
+          DB_NAME=minivault
+          DB_USER=minivault_user
+          DB_PASSWORD=minivault_pass
+          JWT_SECRET=ci-develop-secret-key
+          SPRING_PROFILES_ACTIVE=dev
+          EOF
+
+      - name: Start full stack
+        run: docker compose up --build -d
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for backend..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              echo "✅ Backend healthy"
+              break
+            fi
+            sleep 5
+          done
+          curl -sf http://localhost:8080/actuator/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests..."
+          # Replace with your actual integration test suite
+          curl -sf http://localhost:8080/actuator/health | grep -q '"status":"UP"'
+          echo "✅ Integration tests passed"
+
+      - name: Print logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────
+  # JOB 3: Security Scan (Blocking on develop)
+  # ─────────────────────────────────────────
+  security-scan:
+    name: Security Scan (OWASP)
+    runs-on: ubuntu-latest
+    needs: full-build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Run OWASP Dependency Check
+        working-directory: backend
+        run: ./gradlew dependencyCheckAnalyze
+        # Not continue-on-error here - this blocks on develop!
+
+      - name: Upload OWASP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: develop-owasp-report
+          path: backend/build/reports/dependency-check-report.html
+          retention-days: 30
+
+  # ─────────────────────────────────────────
+  # JOB 4: Tag develop build
+  # ─────────────────────────────────────────
+  tag-build:
+    name: Tag Develop Build
+    runs-on: ubuntu-latest
+    needs: [full-stack-integration, security-scan]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create develop build tag
+        run: |
+          TAG="develop-$(date +'%Y%m%d%H%M%S')-${GITHUB_SHA::7}"
+          echo "Tagging build as: $TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────
+  # JOB 5: Notify on failure
+  # ─────────────────────────────────────────
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [full-build-and-test, full-stack-integration, security-scan]
+    if: failure()
+
+    steps:
+      - name: Print failure summary
+        run: |
+          echo "❌ Develop pipeline FAILED on commit ${{ github.sha }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Branch: ${{ github.ref_name }}"
+          # You can add Slack/email notifications here later:
+          # e.g. uses: slackapi/slack-github-action@v1

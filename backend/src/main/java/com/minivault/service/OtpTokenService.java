@@ -118,34 +118,43 @@ public class OtpTokenService {
     @Transactional
     public void resendOtp(String email) {
         // Find account
-        Account account = accountRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidOtpException("Account not found"));
+        Account account =
+                accountRepository
+                        .findByEmail(email)
+                        .orElseThrow(() -> new InvalidOtpException("Account not found"));
 
         // Check last OTP creation time for throttling (60 seconds)
-        otpRepository.findTopByAccountOrderByCreatedAtDesc(account)
-                .ifPresent(lastOtp -> {
-                    if (lastOtp.getCreatedAt().isAfter(Instant.now().minusSeconds(60))) {
-                        throw new InvalidOtpException("Please wait before requesting a new OTP.");
-                    }
-                });
+        otpRepository
+                .findTopByAccountOrderByCreatedAtDesc(account)
+                .ifPresent(
+                        lastOtp -> {
+                            if (lastOtp.getCreatedAt().isAfter(Instant.now().minusSeconds(60))) {
+                                throw new InvalidOtpException(
+                                        "Please wait before requesting a new OTP.");
+                            }
+                        });
 
         // Expire previous unused OTPs
-        otpRepository.findByAccountAndUsedFalse(account).forEach(token -> {
-            token.setUsed(true); // mark old OTP as used
-            otpRepository.save(token);
-        });
+        otpRepository
+                .findByAccountAndUsedFalse(account)
+                .forEach(
+                        token -> {
+                            token.setUsed(true); // mark old OTP as used
+                            otpRepository.save(token);
+                        });
 
         // Generate new OTP
         String newOtp = generateOtp();
 
-        OtpToken otpToken = OtpToken.builder()
-                .account(account)
-                .token(newOtp)
-                .used(false)
-                .attempts(0)
-                .expiryTime(Instant.now().plusSeconds(300)) // 5 min expiry
-                .createdAt(Instant.now())
-                .build();
+        OtpToken otpToken =
+                OtpToken.builder()
+                        .account(account)
+                        .token(newOtp)
+                        .used(false)
+                        .attempts(0)
+                        .expiryTime(Instant.now().plusSeconds(300)) // 5 min expiry
+                        .createdAt(Instant.now())
+                        .build();
         otpRepository.save(otpToken);
 
         // Send OTP via email
