@@ -6,6 +6,7 @@ import App from './App';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import VerifyOtp from './pages/verify-otp';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
 
@@ -39,6 +40,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                         <PrivateRoute>
                             <Dashboard />
                         </PrivateRoute>
+                    }
+                />
+
+                <Route
+                    path="/verify-otp"
+                    element={
+                        <PublicRoute>
+                            <VerifyOtp />
+                        </PublicRoute>
                     }
                 />
 
