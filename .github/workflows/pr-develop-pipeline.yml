@@ -117,7 +117,7 @@ jobs:
               echo "✅ Backend is up!"
               break
             fi
-            echo "Attempt $i/30 - waiting..."
+            echo "Attempt $i/10 - waiting..."
             sleep 5
           done
           # Final check - fail if still not up
