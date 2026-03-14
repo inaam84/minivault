@@ -1,11 +1,17 @@
 import { theme } from '../../styles/theme';
 
-export default function StatsGrid({ secrets = [] }) {
+export default function StatsGrid({ groups = [] }) {
+    const totalSecrets = groups.reduce((sum, g) => sum + (g.secrets?.length || 0), 0);
+    const topLevelCount = new Set(groups.map(g => g.path.split('/')[0])).size;
+    const lastUpdated = groups.length
+        ? new Date(Math.max(...groups.map(g => new Date(g.updatedAt)))).toLocaleDateString()
+        : '—';
+
     const stats = [
-        { label: 'Total Secrets', value: secrets.length, icon: '🗄️', color: theme.colors.info },
-        { label: 'Production', value: secrets.filter(s => s.env === 'production').length, icon: '🚀', color: theme.colors.danger },
-        { label: 'Staging', value: secrets.filter(s => s.env === 'staging').length, icon: '🧪', color: theme.colors.warning },
-        { label: 'Development', value: secrets.filter(s => s.env === 'development').length, icon: '💻', color: theme.colors.success },
+        { label: 'Total Secrets', value: totalSecrets, icon: '🗄️', color: theme.colors.info },
+        { label: 'Secret Groups', value: groups.length, icon: '📁', color: '#8b5cf6' },
+        { label: 'Top-level Paths', value: topLevelCount, icon: '🗂️', color: theme.colors.warning },
+        { label: 'Last Updated', value: lastUpdated, icon: '🕐', color: theme.colors.success },
     ];
 
     return (

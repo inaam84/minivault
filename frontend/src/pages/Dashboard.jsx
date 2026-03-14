@@ -1,43 +1,54 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { globalStyles, theme } from '../styles/theme';
+import { useSecrets } from '../hooks/useSecrets';
+import { buildTree } from '../utils/secretsTree';
 import Sidebar from '../components/dashboard/Sidebar';
 import Topbar from '../components/dashboard/Topbar';
 import StatsGrid from '../components/dashboard/StatsGrid';
-import SecretsPanel from '../components/dashboard/SecretsPanel';
-
-const MOCK_SECRETS = [
-    { id: 1, name: 'AWS_SECRET_KEY', type: 'credential', updated: '2h ago', env: 'production' },
-    { id: 2, name: 'DB_PASSWORD', type: 'password', updated: '1d ago', env: 'staging' },
-    { id: 3, name: 'STRIPE_API_KEY', type: 'api_key', updated: '3d ago', env: 'production' },
-    { id: 4, name: 'JWT_SECRET', type: 'token', updated: '5d ago', env: 'development' },
-    { id: 5, name: 'REDIS_URL', type: 'credential', updated: '1w ago', env: 'production' },
-];
+import PathExplorer from '../components/dashboard/PathExplorer';
+import SecretGroupDetail from '../components/dashboard/SecretGroupDetail';
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const [heartbeat, setHeartbeat] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [backendUp, setBackendUp] = useState(true);
-    const [activeNav, setActiveNav] = useState('Dashboard');
+    const location = useLocation();
+    const [activeNav, setActiveNav] = useState('Secrets');
+    const [currentPath, setCurrentPath] = useState([]);
+    const [selectedGroup, setSelectedGroup] = useState(null);
 
-    const user = JSON.parse(localStorage.getItem('user') || '{"name":"Alex"}');
+    const user = JSON.parse(localStorage.getItem('user') || '{"name":"User"}');
+    const { groups, loading, error, refetch } = useSecrets();
 
+    // Refetch if returning from NewSecret page after a save
     useEffect(() => {
-        const token = user?.token;
-        fetch('/api/heartbeat/simple', {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-            .then(data => { setHeartbeat(data); setBackendUp(true); })
-            .catch(() => setBackendUp(false))
-            .finally(() => setLoading(false));
-    }, []);
+        if (location.state?.refetch) {
+            refetch();
+            // Clear the state so it doesn't refetch again on re-render
+            navigate('/dashboard', { replace: true, state: {} });
+        }
+    }, [location.state?.refetch]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
     };
+
+    const handleNewSecret = () => {
+        const prefillPath = currentPath.length > 0 ? currentPath.join('/') + '/' : '';
+        navigate('/secrets/new', { state: { prefillPath } });
+    };
+
+    const tree = buildTree(groups);
+
+    const currentNode = (() => {
+        if (currentPath.length === 0) return tree;
+        let node = tree;
+        for (const seg of currentPath) {
+            if (!node[seg]) return {};
+            node = { ...node[seg].__children, __groups: node[seg].__groups };
+        }
+        return node;
+    })();
 
     if (loading) return (
         <>
@@ -45,20 +56,19 @@ export default function Dashboard() {
             <div style={styles.center}>
                 <div style={styles.spinner} />
                 <p style={{ color: theme.colors.textSecondary, marginTop: 16, fontFamily: theme.fonts.mono }}>
-                    Connecting to vault…
+                    Loading vault…
                 </p>
             </div>
         </>
     );
 
-    if (!backendUp) return (
+    if (error) return (
         <>
             <style>{globalStyles}</style>
             <div style={styles.center}>
                 <div style={{ fontSize: 48 }}>⚠️</div>
-                <p style={{ color: theme.colors.danger, marginTop: 16, fontFamily: theme.fonts.mono }}>
-                    Backend unreachable. Please try again later.
-                </p>
+                <p style={{ color: theme.colors.danger, marginTop: 16, fontFamily: theme.fonts.mono }}>{error}</p>
+                <button onClick={refetch} style={styles.retryBtn}>Retry</button>
             </div>
         </>
     );
@@ -69,13 +79,27 @@ export default function Dashboard() {
             <div style={styles.root}>
                 <Sidebar
                     activeNav={activeNav}
-                    onNavChange={setActiveNav}
-                    status={backendUp ? 'online' : 'offline'}
+                    onNavChange={(label) => { setActiveNav(label); setCurrentPath([]); setSelectedGroup(null); }}
+                    status="online"
                 />
                 <main style={styles.main}>
                     <Topbar user={user} onLogout={handleLogout} />
-                    <StatsGrid secrets={MOCK_SECRETS} />
-                    <SecretsPanel secrets={MOCK_SECRETS} />
+                    <StatsGrid groups={groups} />
+
+                    {selectedGroup ? (
+                        <SecretGroupDetail
+                            group={selectedGroup}
+                            onBack={() => setSelectedGroup(null)}
+                        />
+                    ) : (
+                        <PathExplorer
+                            node={currentNode}
+                            currentPath={currentPath}
+                            onNavigate={(path) => { setCurrentPath(path); setSelectedGroup(null); }}
+                            onSelectGroup={setSelectedGroup}
+                            onNewSecret={handleNewSecret}
+                        />
+                    )}
                 </main>
             </div>
         </>
@@ -83,30 +107,9 @@ export default function Dashboard() {
 }
 
 const styles = {
-    root: {
-        display: 'flex',
-        minHeight: '100vh',
-        background: theme.colors.bg,
-    },
-    main: {
-        flex: 1,
-        padding: '32px 40px',
-        overflowY: 'auto',
-    },
-    center: {
-        minHeight: '100vh',
-        background: theme.colors.bg,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    spinner: {
-        width: 36,
-        height: 36,
-        border: `3px solid ${theme.colors.borderLight}`,
-        borderTop: `3px solid ${theme.colors.primary}`,
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-    },
+    root: { display: 'flex', minHeight: '100vh', background: theme.colors.bg },
+    main: { flex: 1, padding: '32px 40px', overflowY: 'auto' },
+    center: { minHeight: '100vh', background: theme.colors.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+    spinner: { width: 36, height: 36, border: `3px solid ${theme.colors.borderLight}`, borderTop: `3px solid ${theme.colors.primary}`, borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    retryBtn: { marginTop: 20, background: theme.colors.primary, color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: theme.fonts.sans, fontWeight: 700 },
 };
