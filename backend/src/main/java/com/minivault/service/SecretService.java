@@ -1,8 +1,11 @@
 package com.minivault.service;
 
+import com.minivault.annotation.Audited;
 import com.minivault.dto.CreateCategoryRequest;
 import com.minivault.dto.UpdateCategoryRequest;
 import com.minivault.dto.UpdateSecretRequest;
+import com.minivault.enums.AuditAction;
+import com.minivault.enums.AuditResource;
 import com.minivault.model.*;
 import com.minivault.repository.*;
 import java.util.*;
@@ -20,6 +23,11 @@ public class SecretService {
     private final SecretVersionRepository versionRepo;
 
     @Transactional
+    @Audited(
+            action = AuditAction.SECRET_CREATED,
+            resource = AuditResource.SECRET,
+            descriptionTemplate = "Created secret category {1}"
+    )
     public SecretCategory createCategoryWithSecrets(
             Account account, CreateCategoryRequest request) {
         log.info("Creating category '{}' for account {}", request.getPath(), account.getId());
@@ -173,6 +181,10 @@ public class SecretService {
     }
 
     @Transactional
+    @Audited(
+            action = AuditAction.SECRET_DELETED,
+            resource = AuditResource.SECRET
+    )
     public void deleteCategoryById(UUID categoryId, Account account) {
         log.info("Deleting category {} for account {}", categoryId, account.getId());
 
