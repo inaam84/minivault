@@ -1,8 +1,11 @@
 package com.minivault.service;
 
+import com.minivault.annotation.Audited;
 import com.minivault.dto.LoginResponse;
 import com.minivault.dto.SignupRequest;
 import com.minivault.dto.SignupResponse;
+import com.minivault.enums.AuditAction;
+import com.minivault.enums.AuditResource;
 import com.minivault.exceptions.EmailAlreadyExistsException;
 import com.minivault.exceptions.InvalidCredentialsException;
 import com.minivault.model.Account;
@@ -31,6 +34,10 @@ public class AuthService {
 
     @Autowired OtpTokenService otpService;
 
+    @Audited(
+            action = AuditAction.LOGIN_SUCCESS,
+            resource = AuditResource.AUTH
+    )
     public LoginResponse login(String email, String password) {
         var accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
@@ -54,13 +61,14 @@ public class AuthService {
                     .build();
         }
 
-        String token = jwtUtil.generateToken(account.getEmail());
+        String token = jwtUtil.generateToken(account.getEmail(), account.getId());
 
         return LoginResponse.builder()
                 .email(account.getEmail())
                 .name(account.getName())
                 .token(token)
                 .message("Login successful")
+                .account(account)
                 .build();
     }
 
@@ -98,13 +106,15 @@ public class AuthService {
             throw new RuntimeException("Unauthenticated");
         }
 
-        String email = authentication.getName(); // email stored as principal
+        Object principal = authentication.getPrincipal();
 
-        log.info("Fetching authenticated account for {}", email);
+        if (principal instanceof Account account) {
+            log.info("Using authenticated account from SecurityContext: {}", account);
+            return account;
+        }
 
-        return accountRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        log.error("Unexpected principal type: {}", principal.getClass().getName());
+        throw new RuntimeException("Account not found");
     }
 
     public void logout() {
