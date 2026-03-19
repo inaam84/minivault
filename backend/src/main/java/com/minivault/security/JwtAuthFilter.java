@@ -61,21 +61,56 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         logger.debug("JWT authenticated user: {} (id={}) for path: {}", username, accountId, requestPath);
                     } else {
                         logger.warn("JWT token missing accountId claim for path: {}", requestPath);
+                        writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token: missing account identity");
                         SecurityContextHolder.clearContext();
+                        return;
                     }
                 } else {
                     logger.warn("JWT validation failed for path: {}", requestPath);
+                    writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
                     SecurityContextHolder.clearContext();
+                    return;
                 }
+            } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+                logger.warn("JWT token expired for path: {}", requestPath);
+                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token has expired, please login again");
+                SecurityContextHolder.clearContext();
+                return;
+
+            } catch (io.jsonwebtoken.MalformedJwtException ex) {
+                logger.warn("JWT token malformed for path: {}", requestPath);
+                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Malformed token");
+                SecurityContextHolder.clearContext();
+                return;
+
+            } catch (io.jsonwebtoken.security.SignatureException ex) {
+                logger.warn("JWT signature invalid for path: {}", requestPath);
+                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token signature");
+                SecurityContextHolder.clearContext();
+                return;
+
             } catch (Exception ex) {
                 logger.warn("JWT validation failed for path: {}", requestPath, ex);
+                writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
                 SecurityContextHolder.clearContext();
+                return;
             }
         } else {
             logger.debug("No JWT token found in request for path: {}", requestPath);
         }
 
-        // Continue filter chain regardless of token status
+        // Only reaches here if:
+        // 1. No auth header (public endpoint, let Spring Security decide)
+        // 2. Token was valid and context was set
         chain.doFilter(request, response);
+    }
+
+    private void writeErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+                String.format("{\"status\": %d, \"error\": \"%s\"}", status, message)
+        );
     }
 }

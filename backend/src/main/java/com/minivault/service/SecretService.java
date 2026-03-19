@@ -95,6 +95,11 @@ public class SecretService {
     }
 
     @Transactional(readOnly = true)
+    @Audited(
+            action = AuditAction.SECRET_READ,
+            resource = AuditResource.SECRET,
+            descriptionTemplate = "Read secret category {0}"
+    )
     public SecretCategory getCategoryById(UUID categoryId, Account account) {
         log.info("Fetching category {} for account {}", categoryId, account.getId());
 
@@ -116,6 +121,11 @@ public class SecretService {
     }
 
     @Transactional
+    @Audited(
+            action = AuditAction.SECRET_UPDATED,
+            resource = AuditResource.SECRET,
+            descriptionTemplate = "Updated secret category {0}"
+    )
     public SecretCategory updateCategory(
             UUID categoryId, Account account, UpdateCategoryRequest request) {
         log.info("Updating category {} for account {}", categoryId, account.getId());
