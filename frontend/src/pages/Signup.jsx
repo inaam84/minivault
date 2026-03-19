@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { globalStyles, theme } from '../styles/theme';
 import AuthCard from '../components/auth/AuthCard';
 import AuthInput from '../components/auth/AuthInput';
+import { publicFetch } from '../utils/apiClient';
 
 export default function Signup() {
     const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function Signup() {
         setLoading(true);
         setServerError('');
         try {
-            const res = await fetch('/api/auth/signup', {
+            const res = await publicFetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: form.name, email: form.email, password: form.password, confirmPassword: form.confirm }),
