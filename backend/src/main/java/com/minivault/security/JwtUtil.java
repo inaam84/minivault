@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.stereotype.Component;
 
@@ -16,10 +17,11 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, UUID accountId) {
         long expirationMillis = 1000 * 60 * 60; // 1 hour
         return Jwts.builder()
                 .setSubject(username)
+                .claim("accountId", accountId.toString())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
