@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { globalStyles, theme } from '../styles/theme';
 import Sidebar from '../components/dashboard/Sidebar';
 import Topbar from '../components/dashboard/Topbar';
+import { privateFetch } from '../utils/apiClient';
 
 const EMPTY_PAIR = () => ({ id: Date.now() + Math.random(), key: '', value: '' });
 
@@ -54,7 +55,7 @@ export default function NewSecret() {
 
         const token = user?.token;
         try {
-            const res = await fetch('/api/secrets/category', {
+            const res = await privateFetch('/api/secrets/category', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

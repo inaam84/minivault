@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { globalStyles, theme } from '../styles/theme';
 import AuthCard from '../components/auth/AuthCard';
+import { publicFetch } from '../utils/apiClient';
 
 const OTP_LENGTH = 6;
 
@@ -67,7 +68,7 @@ export default function VerifyOtp() {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('/api/auth/verify-otp', {
+            const res = await publicFetch('/api/auth/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, otp }),
@@ -93,16 +94,23 @@ export default function VerifyOtp() {
         setError('');
         setResent(false);
         try {
-            await fetch('/api/auth/resend-otp', {
+            const res = await publicFetch('/api/auth/resend-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
             });
+
+            const json = await res.json();
+
+            if (!res.ok || !json.success) {
+                throw new Error(json.error?.message || 'Failed to resend OTP');
+            }
+
             setResent(true);
             setDigits(Array(OTP_LENGTH).fill(''));
             refs.current[0]?.focus();
-        } catch {
-            setError('Failed to resend OTP. Please try again.');
+        } catch(err) {
+            setError(err.message);
         } finally {
             setResending(false);
         }
