@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { theme } from '../../styles/theme';
+import { privateFetch } from '../utils/apiClient';
 
 const EMPTY_PAIR = () => ({ id: Date.now() + Math.random(), key: '', value: '' });
 
@@ -58,7 +59,7 @@ export default function NewSecretModal({ isOpen, onClose, onSuccess, prefillPath
         const token = user?.token;
 
         try {
-            const res = await fetch('/api/secrets/category', {
+            const res = await privateFetch('/api/secrets/category', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

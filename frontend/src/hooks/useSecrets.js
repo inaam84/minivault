@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { privateFetch } from '../utils/apiClient';
 
 export function useSecrets() {
     const [groups, setGroups] = useState([]);
@@ -12,9 +13,9 @@ export function useSecrets() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('/api/secrets', {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
+            const res = await privateFetch('/api/secrets');
+            if (!res) return;
+
             const json = await res.json();
             if (!res.ok || !json.success) {
                 throw new Error(json.error?.message || 'Failed to load secrets');
@@ -36,9 +37,9 @@ export async function fetchSecretById(id) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const token = user?.token;
 
-    const res = await fetch(`/api/secrets/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const res = await privateFetch(`/api/secrets/${id}`);
+    if (!res) return;
+
     const json = await res.json();
     if (!res.ok || !json.success) {
         throw new Error(json.error?.message || 'Failed to load secret');
