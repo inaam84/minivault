@@ -1,10 +1,6 @@
 package com.minivault.controller;
 
-import com.minivault.dto.ApiResponse;
-import com.minivault.dto.LoginRequest;
-import com.minivault.dto.LoginResponse;
-import com.minivault.dto.SignupRequest;
-import com.minivault.dto.SignupResponse;
+import com.minivault.dto.*;
 import com.minivault.service.AuthService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
@@ -48,5 +44,18 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.failure("UNAUTHORIZED", "Not logged in"));
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        authService.requestPasswordReset(request.getEmail());
+        // Always return success — even if email not found
+        return ResponseEntity.ok(ApiResponse.success("If an account exists, a reset OTP has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        authService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully. Please log in."));
     }
 }

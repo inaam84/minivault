@@ -8,11 +8,14 @@ import com.minivault.enums.AuditAction;
 import com.minivault.enums.AuditResource;
 import com.minivault.exceptions.EmailAlreadyExistsException;
 import com.minivault.exceptions.InvalidCredentialsException;
+import com.minivault.exceptions.InvalidOtpException;
 import com.minivault.model.Account;
 import com.minivault.repository.AccountRepository;
 import com.minivault.security.JwtUtil;
 import jakarta.mail.MessagingException;
 import java.io.IOException;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,5 +129,30 @@ public class AuthService {
 
         log.info("User {} logged out successfully", authentication.getName());
         SecurityContextHolder.clearContext();
+    }
+
+    // ─────────────────────────────────────────
+    // Step 1 — request reset, sends OTP email
+    // ─────────────────────────────────────────
+    public void requestPasswordReset(String email) {
+        // OtpTokenService handles silent fail if email not found
+        otpService.sendPasswordResetOtp(email);
+    }
+
+    // ─────────────────────────────────────────
+    // Step 2 — verify OTP + set new password
+    // ─────────────────────────────────────────
+    @Transactional
+    public void resetPassword(String email, String otp, String newPassword) {
+        // Verify OTP — throws if invalid/expired
+        Account account = otpService.verifyPasswordResetOtp(email, otp);
+
+        // Prevent reusing the same password
+        if (passwordEncoder.matches(newPassword, account.getPassword())) {
+            throw new InvalidOtpException("New password must be different from your current password.");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
     }
 }
