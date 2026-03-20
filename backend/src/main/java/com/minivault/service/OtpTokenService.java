@@ -1,5 +1,6 @@
 package com.minivault.service;
 
+import com.minivault.enums.OtpType;
 import com.minivault.exceptions.InvalidOtpException;
 import com.minivault.model.Account;
 import com.minivault.model.OtpToken;
@@ -8,6 +9,8 @@ import com.minivault.repository.OtpTokenRepository;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -159,5 +162,94 @@ public class OtpTokenService {
 
         // Send OTP via email
         emailService.sendOtpEmailHtml(email, account.getName(), newOtp);
+    }
+
+    // ─────────────────────────────────────────
+    // Send password reset OTP
+    // Fails silently if account not found (security best practice)
+    // ─────────────────────────────────────────
+    public void sendPasswordResetOtp(String email) {
+        Optional<Account> accountOpt = accountRepository.findByEmail(email);
+
+        // Silent return if account not found — don't reveal whether email exists
+        if (accountOpt.isEmpty()) {
+            return;
+        }
+
+        Account account = accountOpt.get();
+
+        // Throttle — max 3 reset OTP requests per 10 minutes
+        long recentRequests = otpRepository.countByAccountAndTypeAndCreatedAtAfter(
+                account,
+                OtpType.PASSWORD_RESET,
+                Instant.now().minusSeconds(600)
+        );
+
+        if (recentRequests >= 3) {
+            throw new InvalidOtpException("Too many password reset requests. Please try again later.");
+        }
+
+        // Expire all previous unused reset OTPs for this account
+        otpRepository.findByAccountAndUsedFalseAndType(account, OtpType.PASSWORD_RESET)
+                .forEach(token -> {
+                    token.setUsed(true);
+                    otpRepository.save(token);
+                });
+
+        // Generate and save new OTP
+        String otp = generateOtp();
+
+        OtpToken token = OtpToken.builder()
+                .account(account)
+                .token(otp)
+                .type(OtpType.PASSWORD_RESET)
+                .expiryTime(Instant.now().plusSeconds(300)) // 5 minutes
+                .used(false)
+                .attempts(0)
+                .build();
+
+        otpRepository.save(token);
+
+        // Send password reset email
+        emailService.sendPasswordResetOtpEmail(email, account.getName(), otp);
+    }
+
+    // ─────────────────────────────────────────
+    // Verify password reset OTP
+    // Returns the account if valid — AuthService uses it to update password
+    // ─────────────────────────────────────────
+    @Transactional
+    public Account verifyPasswordResetOtp(String email, String otp) {
+        Account account = accountRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new InvalidOtpException("Invalid request"));
+
+        OtpToken token = otpRepository
+                .findTopByAccountAndTypeOrderByCreatedAtDesc(account, OtpType.PASSWORD_RESET)
+                .orElseThrow(() -> new InvalidOtpException("OTP not found"));
+
+        if (token.isUsed()) {
+            throw new InvalidOtpException("OTP already used");
+        }
+
+        if (token.getExpiryTime().isBefore(Instant.now())) {
+            throw new InvalidOtpException("OTP expired");
+        }
+
+        if (token.getAttempts() >= 5) {
+            throw new InvalidOtpException("Too many attempts");
+        }
+
+        if (!token.getToken().equals(otp)) {
+            token.setAttempts(token.getAttempts() + 1);
+            otpRepository.save(token);
+            throw new InvalidOtpException("Invalid OTP");
+        }
+
+        // Mark as used
+        token.setUsed(true);
+        otpRepository.save(token);
+
+        return account; // hand back to AuthService
     }
 }

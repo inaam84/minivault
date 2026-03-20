@@ -1,5 +1,6 @@
 package com.minivault.model;
 
+import com.minivault.enums.OtpType;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -23,6 +24,11 @@ public class OtpToken {
 
     @Column(nullable = false, length = 10)
     private String token;
+
+    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private OtpType type = OtpType.EMAIL_VERIFICATION;
 
     @Column(nullable = false)
     private Instant expiryTime;
