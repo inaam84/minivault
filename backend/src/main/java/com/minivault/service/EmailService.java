@@ -50,20 +50,11 @@ public class EmailService {
         } catch (IOException e) {
             throw new EmailSendingException("Failed to load email template", e);
         }
-        String subject = "Verify Your Email for MiniVault";
-        String htmlContent = templateHtml.replace("{{name}}", name).replace("{{otp}}", otp);
+        String body = templateHtml
+                .replace("{{name}}", name)
+                .replace("{{otp}}", otp);
 
-        try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(toEmail);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true); // true = HTML
-
-            javaMailSender.send(message);
-        } catch (MessagingException e) {
-            throw new EmailSendingException("Failed to send email", e);
-        }
+        sendHtmlEmail(toEmail, "Verify Your Email for MiniVault", body);
     }
 
     @Async
@@ -74,13 +65,35 @@ public class EmailService {
         } catch (IOException e) {
             throw new EmailSendingException("Failed to load email template", e);
         }
-        String subject = "Reset Your MiniVault Password";
-        String htmlContent = templateHtml.replace("{{name}}", name).replace("{{otp}}", otp);
+        String body = templateHtml
+                .replace("{{name}}", name)
+                .replace("{{otp}}", otp);
 
+        sendHtmlEmail(toEmail, "Reset Your MiniVault Password", body);
+    }
+
+    @Async
+    public void sendInviteEmail(String toEmail, String inviterName,
+                                String orgName, String inviteLink) {
+        String templateHtml;
+        try {
+            templateHtml = loadTemplate("organisation-invite-email.html");
+        } catch (IOException e) {
+            throw new EmailSendingException("Failed to load email template", e);
+        }
+        String body = templateHtml
+                .replace("{{inviterName}}", inviterName)
+                .replace("{{orgName}}", orgName)
+                .replace("{{inviteLink}}", inviteLink);
+
+        sendHtmlEmail(toEmail, "You've been invited to join " + orgName + " on MiniVault", body);
+    }
+
+    public void sendHtmlEmail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(toEmail);
+            helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = HTML
 

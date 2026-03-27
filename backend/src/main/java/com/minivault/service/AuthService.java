@@ -113,7 +113,12 @@ public class AuthService {
 
         if (principal instanceof Account account) {
             log.info("Using authenticated account from SecurityContext: {}", account);
-            return account;
+//            return account;
+            return accountRepository.findById(account.getId())
+                    .orElseThrow(() -> {
+                        log.error("Authenticated account not found in DB: {}", account.getId());
+                        return new RuntimeException("Account not found");
+                    });
         }
 
         log.error("Unexpected principal type: {}", principal.getClass().getName());

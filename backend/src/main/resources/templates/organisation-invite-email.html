@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>You've been invited to join {{orgName}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f7;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4F46E5;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .content {
+            padding: 20px;
+            font-size: 16px;
+            color: #333333;
+        }
+        .org-badge {
+            display: block;
+            text-align: center;
+            margin: 24px 0 8px;
+        }
+        .org-badge svg {
+            width: 52px;
+            height: 52px;
+        }
+        .org-name {
+            display: block;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #4F46E5;
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+        .btn-wrap {
+            text-align: center;
+            margin: 28px 0 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4F46E5;
+            color: #ffffff;
+            padding: 14px 36px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .fallback-link {
+            word-break: break-all;
+            color: #4F46E5;
+            font-size: 13px;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #eeeeee;
+            margin: 24px 0;
+        }
+        .warning {
+            background-color: #fff8f0;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #92400e;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+            padding: 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+            .button {
+                padding: 12px 24px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">MiniVault</div>
+
+    <div class="content">
+
+        <div class="org-badge">
+            <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="26" cy="26" r="26" fill="#EEF2FF"/>
+                <path d="M36 38H16V36C16 32.686 18.686 30 22 30H30C33.314 30 36 32.686 36 36V38Z" fill="#4F46E5"/>
+                <circle cx="26" cy="22" r="6" fill="#4F46E5"/>
+                <path d="M40 38H36V36C36 34.343 35.404 32.827 34.416 31.647C37.574 32.343 40 35.172 40 38Z" fill="#818CF8"/>
+                <path d="M17.584 31.647C16.596 32.827 16 34.343 16 36V38H12C12 35.172 14.426 32.343 17.584 31.647Z" fill="#818CF8"/>
+                <circle cx="36" cy="20" r="4" fill="#818CF8"/>
+                <circle cx="16" cy="20" r="4" fill="#818CF8"/>
+            </svg>
+        </div>
+
+        <span class="org-name">{{orgName}}</span>
+
+        <p>Hi there,</p>
+        <p><strong>{{inviterName}}</strong> has invited you to join <strong>{{orgName}}</strong> on MiniVault — a secure secrets management platform for teams.</p>
+
+        <p>Click the button below to accept the invitation and get started:</p>
+
+        <div class="btn-wrap">
+            <a href="{{inviteLink}}" class="button">Accept Invitation</a>
+        </div>
+
+        <p style="font-size: 14px; color: #555555;">
+            If the button above doesn't work, copy and paste the link below into your browser:
+        </p>
+        <p><a href="{{inviteLink}}" class="fallback-link">{{inviteLink}}</a></p>
+
+        <hr class="divider">
+
+        <div class="warning">
+            ⚠️ This invitation link expires in <strong>48 hours</strong> and can only be used once.
+            If you were not expecting this invitation, you can safely ignore this email.
+        </div>
+
+    </div>
+
+    <div class="footer">
+        &copy; 2026 MiniVault. All rights reserved.<br>
+        You received this email because someone invited you to join their organisation on MiniVault.
+    </div>
+
+</div>
+</body>
+</html>

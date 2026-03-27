@@ -1,5 +1,6 @@
 package com.minivault.exceptions;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.minivault.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,20 +15,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<?>> handleInvalidRequestBody(
-            HttpMessageNotReadableException ex) {
-        logger.warn("Request body is missing or invalid: {}", ex.getMessage());
-        return ResponseEntity.badRequest()
-                .body(
-                        ApiResponse.failure(
-                                "INVALID_REQUEST_BODY", "Request body is missing or invalid"));
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleValidationExceptions(
@@ -130,6 +124,45 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ApiResponse.failure("METHOD_NOT_ALLOWED",
                         "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint"));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidRequestBody(
+            HttpMessageNotReadableException ex) {
+
+        String message = "Request body is missing or malformed";
+
+        Throwable cause = ex.getCause();
+
+        if (cause instanceof InvalidFormatException invalidFormat) {
+            // Invalid enum value or wrong type
+            if (invalidFormat.getTargetType() != null && invalidFormat.getTargetType().isEnum()) {
+                String fieldName = invalidFormat.getPath().isEmpty()
+                        ? "field"
+                        : invalidFormat.getPath().get(invalidFormat.getPath().size() - 1).getFieldName();
+
+                String invalidValue = String.valueOf(invalidFormat.getValue());
+
+                String allowedValues = Arrays.stream(invalidFormat.getTargetType().getEnumConstants())
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "));
+
+                message = "Invalid value '" + invalidValue + "' for field '" + fieldName +
+                        "'. Allowed values are: " + allowedValues;
+            } else {
+                // Wrong type e.g. string where number expected
+                String fieldName = invalidFormat.getPath().isEmpty()
+                        ? "field"
+                        : invalidFormat.getPath().get(invalidFormat.getPath().size() - 1).getFieldName();
+
+                message = "Invalid value for field '" + fieldName + "'";
+            }
+        }
+
+        logger.warn(message);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure("INVALID_REQUEST_BODY", message));
     }
 
     // Fallback for unexpected errors

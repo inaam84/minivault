@@ -35,7 +35,7 @@ public class SecurityConfig {
                         auth ->
                                 auth.requestMatchers("/api/heartbeat/**")
                                         .permitAll() // allow all heartbeat endpoints
-                                        .requestMatchers("/api/auth/**")
+                                        .requestMatchers("/api/auth/**", "/api/organisations/invite/accept")
                                         .permitAll() // allow signup/login
                                         .anyRequest()
                                         .authenticated())
