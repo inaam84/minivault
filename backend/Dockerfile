@@ -1,4 +1,14 @@
 # ------------------------
+# Development Stage
+# ------------------------
+FROM gradle:8.9-jdk17-alpine AS dev
+
+WORKDIR /home/gradle/project
+
+# Just keep the container ready for the volumes mount and bootRun
+#ENTRYPOINT ["gradle", "bootRun", "--continuous"]
+
+# ------------------------
 # Build stage
 # ------------------------
 FROM gradle:8.9-jdk17-alpine AS build
@@ -20,7 +30,7 @@ RUN gradle spotlessApply
 RUN gradle clean bootJar -x test
 
 # ------------------------
-# Run stage
+# Run stage (Production)
 # ------------------------
 FROM eclipse-temurin:17-jre-alpine
 

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,14 +45,20 @@ public class AuthService {
     public LoginResponse login(String email, String password) {
         var accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password. 1");
         }
 
         var account = accountOpt.get();
 
+        boolean matches = passwordEncoder.matches(password, account.getPassword());
+        log.info("Raw password: {}", password);
+        log.info("Encoded password from DB: {}", account.getPassword());
+        log.info("Password match result: {}", matches);
+        log.info(new BCryptPasswordEncoder().encode("Password1!"));
+
         // Check password
         if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password. 2");
         }
 
         // Check if account is verified

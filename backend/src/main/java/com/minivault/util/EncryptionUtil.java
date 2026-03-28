@@ -1,125 +1,94 @@
 package com.minivault.util;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Base64;
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-/**
- * Encryption utility for encrypting and decrypting secret values. Uses AES encryption algorithm for
- * security.
- */
 @Component
 @Slf4j
 public class EncryptionUtil {
 
-    private static final String ENCRYPTION_ALGORITHM = "AES";
-    private static final int KEY_SIZE = 256; // 256-bit key
-    private SecretKey secretKey;
+    private static final String ALGORITHM = "AES/GCM/NoPadding";
+    private static final int IV_LENGTH = 12; // 96 bits (recommended)
+    private static final int TAG_LENGTH = 128; // bits
 
-    /** Initialize encryption key from environment variable or generate a new one */
+    private final SecretKey secretKey;
+    private final SecureRandom secureRandom = new SecureRandom();
+
     public EncryptionUtil(@Value("${encryption.key:}") String encryptionKeyString) {
-        try {
-            if (encryptionKeyString != null && !encryptionKeyString.isEmpty()) {
-                // Load key from environment variable (Base64 encoded)
-                byte[] decodedKey = Base64.getDecoder().decode(encryptionKeyString);
-
-                // Ensure key is exactly 32 bytes for AES-256
-                byte[] keyBytes = new byte[32];
-                if (decodedKey.length >= 32) {
-                    // If key is longer, take first 32 bytes
-                    System.arraycopy(decodedKey, 0, keyBytes, 0, 32);
-                } else {
-                    // If key is shorter, copy it and let the rest be zeros (padded)
-                    System.arraycopy(decodedKey, 0, keyBytes, 0, decodedKey.length);
-                }
-
-                this.secretKey = new SecretKeySpec(keyBytes, ENCRYPTION_ALGORITHM);
-                log.info(
-                        "Encryption key loaded from environment variable (length: {} bytes)",
-                        decodedKey.length);
-            } else {
-                // Generate a new random key if not provided
-                this.secretKey = generateKey();
-                log.warn(
-                        "No encryption key provided. Generated a new random key. "
-                                + "Set encryption.key environment variable for persistence.");
-            }
-        } catch (Exception e) {
-            log.error("Error initializing encryption key", e);
-            throw new RuntimeException("Failed to initialize encryption key", e);
-        }
-    }
-
-    /** Generate a new random encryption key */
-    private SecretKey generateKey() throws Exception {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance(ENCRYPTION_ALGORITHM);
-        keyGenerator.init(KEY_SIZE);
-        return keyGenerator.generateKey();
-    }
-
-    /**
-     * Encrypt a plain text value
-     *
-     * @param plainValue The plain text value to encrypt
-     * @return Base64 encoded encrypted value
-     */
-    public String encrypt(String plainValue) {
-        if (plainValue == null || plainValue.isEmpty()) {
-            return plainValue;
+        if (encryptionKeyString == null || encryptionKeyString.isBlank()) {
+            throw new IllegalStateException("CRITICAL: encryption.key is not set!");
         }
 
+        byte[] decodedKey = Base64.getDecoder().decode(encryptionKeyString.trim());
+
+        if (decodedKey.length != 32) {
+            throw new IllegalArgumentException("Key must be 32 bytes for AES-256");
+        }
+
+        this.secretKey = new SecretKeySpec(decodedKey, "AES");
+
+        log.info("AES-GCM Encryption initialized (key length: {} bytes)", decodedKey.length);
+    }
+
+    public String encrypt(String plainText) {
+        if (plainText == null || plainText.isEmpty()) return plainText;
+
         try {
-            Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            byte[] encryptedBytes = cipher.doFinal(plainValue.getBytes());
-            return Base64.getEncoder().encodeToString(encryptedBytes);
+            byte[] iv = new byte[IV_LENGTH];
+            secureRandom.nextBytes(iv);
+
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
+
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, spec);
+
+            byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+            // Combine IV + ciphertext
+            ByteBuffer buffer = ByteBuffer.allocate(iv.length + encrypted.length);
+            buffer.put(iv);
+            buffer.put(encrypted);
+
+            return Base64.getEncoder().encodeToString(buffer.array());
+
         } catch (Exception e) {
-            log.error("Error encrypting value", e);
             throw new RuntimeException("Encryption failed", e);
         }
     }
 
-    /**
-     * Decrypt an encrypted value
-     *
-     * @param encryptedValue The Base64 encoded encrypted value
-     * @return Decrypted plain text value
-     */
     public String decrypt(String encryptedValue) {
-        if (encryptedValue == null || encryptedValue.isEmpty()) {
-            return encryptedValue;
-        }
+        if (encryptedValue == null || encryptedValue.isEmpty()) return encryptedValue;
 
         try {
-            Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decodedBytes = Base64.getDecoder().decode(encryptedValue);
-            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
-            return new String(decryptedBytes);
-        } catch (Exception e) {
-            log.error("Error decrypting value", e);
-            throw new RuntimeException("Decryption failed", e);
-        }
-    }
+            byte[] decoded = Base64.getDecoder().decode(encryptedValue);
 
-    /**
-     * Generate and print a new encryption key for configuration Call this once to generate a key,
-     * then set it in environment variables
-     */
-    public String generateAndEncodeKey() {
-        try {
-            SecretKey newKey = generateKey();
-            String encodedKey = Base64.getEncoder().encodeToString(newKey.getEncoded());
-            log.info("Generated new encryption key: {}", encodedKey);
-            return encodedKey;
+            ByteBuffer buffer = ByteBuffer.wrap(decoded);
+
+            byte[] iv = new byte[IV_LENGTH];
+            buffer.get(iv);
+
+            byte[] cipherText = new byte[buffer.remaining()];
+            buffer.get(cipherText);
+
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new GCMParameterSpec(TAG_LENGTH, iv));
+
+            byte[] decrypted = cipher.doFinal(cipherText);
+
+            return new String(decrypted, StandardCharsets.UTF_8);
+
         } catch (Exception e) {
-            log.error("Error generating key", e);
-            throw new RuntimeException("Failed to generate key", e);
+            log.error("Decryption failed");
+            return "[DECRYPTION_FAILED]";
         }
     }
 }
