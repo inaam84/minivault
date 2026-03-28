@@ -1,14 +1,15 @@
 import { theme } from '../../styles/theme';
 
 const navItems = [
-    { icon: '▦', label: 'Dashboard' },
-    { icon: '🗝', label: 'Secrets' },
-    { icon: '👥', label: 'Access' },
-    { icon: '📋', label: 'Audit Log' },
-    { icon: '⚙️', label: 'Settings' },
+    { icon: '▦',  label: 'Dashboard' },
+    { icon: '🗝',  label: 'Secrets' },
+    { icon: '🏢',  label: 'Organisation' },
+    { icon: '👥',  label: 'Access' },
+    { icon: '📋',  label: 'Audit Log' },
+    { icon: '⚙️',  label: 'Settings' },
 ];
 
-export default function Sidebar({ activeNav, onNavChange, status = 'online' }) {
+export default function Sidebar({ activeNav, onNavChange, status = 'online', orgName = null }) {
     return (
         <>
             <style>{`
@@ -38,11 +39,20 @@ export default function Sidebar({ activeNav, onNavChange, status = 'online' }) {
                 </nav>
 
                 <div style={styles.footer}>
-                    <div style={{
-                        ...styles.statusDot,
-                        background: status === 'online' ? theme.colors.success : theme.colors.danger,
-                    }} />
-                    <span style={styles.statusText}>vault-core · {status}</span>
+                    {/* Org badge */}
+                    {orgName && (
+                        <div style={styles.orgBadge}>
+                            <span style={styles.orgDot} />
+                            <span style={styles.orgName}>{orgName}</span>
+                        </div>
+                    )}
+                    <div style={styles.statusRow}>
+                        <div style={{
+                            ...styles.statusDot,
+                            background: status === 'online' ? theme.colors.success : theme.colors.danger,
+                        }} />
+                        <span style={styles.statusText}>vault-core · {status}</span>
+                    </div>
                 </div>
             </aside>
         </>
@@ -98,6 +108,36 @@ const styles = {
     },
     footer: {
         padding: '20px 24px 0',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+    },
+    orgBadge: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        background: theme.colors.primaryMuted,
+        border: `1px solid rgba(99,102,241,0.2)`,
+        borderRadius: 8,
+        padding: '7px 10px',
+    },
+    orgDot: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: theme.colors.primary,
+        flexShrink: 0,
+    },
+    orgName: {
+        color: '#a5b4fc',
+        fontSize: 11,
+        fontFamily: theme.fonts.mono,
+        fontWeight: 600,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    statusRow: {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
