@@ -1,0 +1,4 @@
+app:
+  seeding:
+    enabled: true
+    accounts-count: 5

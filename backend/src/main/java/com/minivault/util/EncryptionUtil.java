@@ -27,7 +27,15 @@ public class EncryptionUtil {
     private static final int GCM_TAG_LENGTH_BITS = 128; // Authentication tag
 
     private final SecretKey secretKey;
-    private final SecureRandom secureRandom = new SecureRandom();
+    private static final SecureRandom secureRandom = createSecureRandom();
+    private static SecureRandom createSecureRandom() {
+        try {
+            return SecureRandom.getInstanceStrong();
+        } catch (Exception e) {
+            log.warn("Strong SecureRandom not available, falling back to default", e);
+            return new SecureRandom();
+        }
+    }
 
     /**
      * Constructor injects the encryption key from property `encryption.key` (Base64-encoded).

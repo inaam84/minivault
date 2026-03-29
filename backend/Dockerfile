@@ -44,7 +44,7 @@ COPY --from=build /home/gradle/project/build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Optional: environment variable for JVM options
-ENV JAVA_OPTS=""
+ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
 
 # Run Spring Boot application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
