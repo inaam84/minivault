@@ -2,3 +2,5 @@ app:
   seeding:
     enabled: true
     accounts-count: 5
+    categories-per-account: 3
+    secrets-per-category: 4

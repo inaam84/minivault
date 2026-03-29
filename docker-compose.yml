@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ------------------------
   # MySQL Database
@@ -12,8 +10,9 @@ services:
       MYSQL_USER: app
       MYSQL_PASSWORD: app
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -42,6 +41,7 @@ services:
     volumes:
       - ./backend:/home/gradle/project          # Mount the whole project
       - gradle_cache:/home/gradle/.gradle        # Cache dependencies locally so it stays fast
+      - gradle_build:/home/gradle/project/build  # Cache Gradle build output
     # This keeps Gradle alive and watching for file changes, and runs the Spring Boot app
     command: >
       ./gradlew bootRun --continuous --no-daemon
@@ -67,8 +67,9 @@ services:
       - ./frontend:/app          # mount local code
       - /app/node_modules        # avoid overwriting container node_modules
     environment:
-    - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_USEPOLLING=true
 
 volumes:
   db_data:
   gradle_cache:
+  gradle_build:

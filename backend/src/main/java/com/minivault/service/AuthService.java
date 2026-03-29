@@ -45,16 +45,12 @@ public class AuthService {
     public LoginResponse login(String email, String password) {
         var accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password.");
         }
 
         var account = accountOpt.get();
 
         boolean matches = passwordEncoder.matches(password, account.getPassword());
-        log.info("Raw password: {}", password);
-        log.info("Encoded password from DB: {}", account.getPassword());
-        log.info("Password match result: {}", matches);
-        log.info(new BCryptPasswordEncoder().encode("Password1!"));
 
         // Check password
         if (!passwordEncoder.matches(password, account.getPassword())) {
