@@ -3,69 +3,66 @@ package com.minivault.util;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Hibernate converter that automatically encrypts secret values before storing in database and
- * decrypts them when loading from database.
+ * Hibernate AttributeConverter for encrypted secret fields.
  *
- * <p>Usage: Add @Convert(converter = SecretValueConverter.class) to entity field
+ * Uses EncryptionUtilHolder (static singleton) instead of autowiring EncryptionUtil directly.
+ * This works because Hibernate converters are not Spring-managed beans.
+ *
+ * Usage in entity:
+ * @Convert(converter = SecretValueConverter.class)
+ * private String apiSecret;
  */
-@Converter(autoApply = false)
+@Converter
 @Slf4j
 public class SecretValueConverter implements AttributeConverter<String, String> {
 
-    private static EncryptionUtil encryptionUtil;
-
-    /** This setter is called by Spring to inject the EncryptionUtil bean */
-    @Autowired
-    public void setEncryptionUtil(EncryptionUtil encryptionUtil) {
-        SecretValueConverter.encryptionUtil = encryptionUtil;
-    }
-
     /**
-     * Called when saving to database - converts entity attribute to database column This encrypts
-     * the plain text value
-     *
-     * @param attribute The plain text secret value
-     * @return Encrypted value to store in database
+     * Convert entity attribute (plaintext) to database column (encrypted).
+     * Called before INSERT/UPDATE.
      */
     @Override
     public String convertToDatabaseColumn(String attribute) {
-        if (attribute == null || attribute.isEmpty()) {
-            return attribute;
+        // NULL values stay NULL in database
+        if (attribute == null) {
+            return null;
         }
 
         try {
-            String encrypted = encryptionUtil.encrypt(attribute);
-            log.debug("Encrypted secret value for storage");
-            return encrypted;
-        } catch (Exception e) {
+            return EncryptionUtilHolder.encrypt(attribute);
+        } catch (IllegalArgumentException e) {
+            // Empty string or validation error
+            log.warn("Cannot encrypt empty or invalid secret value: {}", e.getMessage());
+            return null;
+        } catch (EncryptionUtil.EncryptionException e) {
+            // Encryption operation failed
             log.error("Error encrypting secret value", e);
-            throw new RuntimeException("Failed to encrypt secret value", e);
+            throw new RuntimeException("Failed to encrypt secret for storage", e);
         }
     }
 
     /**
-     * Called when loading from database - converts database column to entity attribute This
-     * decrypts the encrypted value
-     *
-     * @param dbData The encrypted value from database
-     * @return Decrypted plain text value
+     * Convert database column (encrypted) to entity attribute (plaintext).
+     * Called when loading entity from database.
      */
     @Override
     public String convertToEntityAttribute(String dbData) {
-        if (dbData == null || dbData.isEmpty()) {
-            return dbData;
+        // NULL in database means null in entity
+        if (dbData == null) {
+            return null;
         }
 
         try {
-            String decrypted = encryptionUtil.decrypt(dbData);
-            log.debug("Decrypted secret value for entity");
-            return decrypted;
-        } catch (Exception e) {
-            log.error("Error decrypting secret value", e);
-            throw new RuntimeException("Failed to decrypt secret value", e);
+            return EncryptionUtilHolder.decrypt(dbData);
+        } catch (IllegalArgumentException e) {
+            // Malformed Base64 or empty ciphertext
+            log.error("Decryption failed: invalid encrypted data format: {}", e.getMessage());
+            throw new RuntimeException("Corrupted encrypted secret in database", e);
+        } catch (EncryptionUtil.DecryptionException e) {
+            // Authentication tag failed (tampering, corruption, or wrong key)
+            log.error("Decryption authentication failed — secret data may be corrupted or encryption key is wrong", e);
+            throw new RuntimeException("Authentication failed: unable to decrypt stored secret", e);
         }
     }
 }

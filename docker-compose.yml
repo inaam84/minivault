@@ -38,6 +38,7 @@ services:
       DB_PASSWORD: app
       ENCRYPTION_KEY: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
       SPRING_PROFILES_ACTIVE: dev
+      JAVA_OPTS: "-Djava.security.egd=file:/dev/urandom"
     volumes:
       - ./backend:/home/gradle/project          # Mount the whole project
       - gradle_cache:/home/gradle/.gradle        # Cache dependencies locally so it stays fast
