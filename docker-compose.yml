@@ -28,6 +28,7 @@ services:
   backend:
     build:
       context: ./backend
+      target: dev  # We will add this stage to your Dockerfile
     restart: unless-stopped
     environment:
       DB_HOST: db
@@ -35,7 +36,14 @@ services:
       DB_NAME: minivault
       DB_USERNAME: app
       DB_PASSWORD: app
-      ENCRYPTION_KEY: "dGVzdC1lbmNyeXB0aW9uLWtleS1mb3ItZGV2LXB1cnBvc2VzLW9ubHk="
+      ENCRYPTION_KEY: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
+      SPRING_PROFILES_ACTIVE: dev
+    volumes:
+      - ./backend:/home/gradle/project          # Mount the whole project
+      - gradle_cache:/home/gradle/.gradle        # Cache dependencies locally so it stays fast
+    # This keeps Gradle alive and watching for file changes, and runs the Spring Boot app
+    command: >
+      ./gradlew bootRun --continuous --no-daemon
     depends_on:
       db:
         condition: service_healthy
@@ -62,3 +70,4 @@ services:
 
 volumes:
   db_data:
+  gradle_cache:

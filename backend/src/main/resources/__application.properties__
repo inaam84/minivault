@@ -1,6 +1,8 @@
 spring.application.name=minivault-backend
 spring.datasource.url=jdbc:mysql://localhost:3306/minivault
 spring.datasource.username=app
-spring.datasource.password=yourpassword
+spring.datasource.password=app
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
+spring.sql.init.mode=always
+spring.jpa.defer-datasource-initialization=true

@@ -8,10 +8,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+  sql:
+    init:
+      mode: always
+      separator: ";\n"
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
@@ -26,7 +31,8 @@ spring:
 
 # Encryption configuration
 encryption:
-  key: ${ENCRYPTION_KEY:}  # Set via environment variable for production
+  # Use the dev key as default; override with ENCRYPTION_KEY env var in prod
+  key: ${ENCRYPTION_KEY:NZSJ4rWp7BVeYX9X+dhMjWcYo3XQAxXLZB19b17jbac=}
 
 otp:
   cleanup:
