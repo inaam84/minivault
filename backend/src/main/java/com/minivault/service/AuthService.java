@@ -58,7 +58,7 @@ public class AuthService {
 
         // Check password
         if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password. Please try again.");
         }
 
         // Check if account is verified
