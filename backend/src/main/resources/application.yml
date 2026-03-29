@@ -8,15 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
-  sql:
-    init:
-      mode: always
-      separator: ";\n"
   mail:
     host: sandbox.smtp.mailtrap.io
     port: 2525
