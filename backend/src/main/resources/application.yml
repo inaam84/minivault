@@ -32,7 +32,7 @@ spring:
 # Encryption configuration
 encryption:
   # Use the dev key as default; override with ENCRYPTION_KEY env var in prod
-  key: ${ENCRYPTION_KEY:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
+  key: ${ENCRYPTION_KEY:NZSJ4rWp7BVeYX9X+dhMjWcYo3XQAxXLZB19b17jbac=}
 
 otp:
   cleanup:

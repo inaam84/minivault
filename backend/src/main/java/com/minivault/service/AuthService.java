@@ -45,7 +45,7 @@ public class AuthService {
     public LoginResponse login(String email, String password) {
         var accountOpt = accountRepository.findByEmail(email);
         if (accountOpt.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid email or password. 1");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         var account = accountOpt.get();
@@ -58,7 +58,7 @@ public class AuthService {
 
         // Check password
         if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new InvalidCredentialsException("Invalid email or password. 2");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         // Check if account is verified
