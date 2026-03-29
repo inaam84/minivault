@@ -5,9 +5,6 @@ FROM gradle:8.9-jdk17-alpine AS dev
 
 WORKDIR /home/gradle/project
 
-# Just keep the container ready for the volumes mount and bootRun
-#ENTRYPOINT ["gradle", "bootRun", "--continuous"]
-
 # ------------------------
 # Build stage
 # ------------------------
