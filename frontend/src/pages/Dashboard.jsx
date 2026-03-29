@@ -79,7 +79,12 @@ export default function Dashboard() {
             <div style={styles.root}>
                 <Sidebar
                     activeNav={activeNav}
-                    onNavChange={(label) => { setActiveNav(label); setCurrentPath([]); setSelectedGroup(null); }}
+                    onNavChange={
+                        (label) => {
+                            if (label === 'Organisation') navigate('/organisation');
+                            setActiveNav(label); setCurrentPath([]); setSelectedGroup(null);
+                        }
+                    }
                     status="online"
                 />
                 <main style={styles.main}>
